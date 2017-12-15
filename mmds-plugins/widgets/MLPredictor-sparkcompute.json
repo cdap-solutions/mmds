@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "spec-version": "1.4"
+  },
+  "configuration-groups": [
+    {
+      "label": "Model Configuration",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Experiment ID",
+          "name": "experimentId"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Model ID",
+          "name": "modelId"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Prediction Field",
+          "name": "predictionField"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Model Dataset",
+          "name": "modelDataset"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Model MetaData Dataset",
+          "name": "modelMetaDataset"
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "schema",
+      "widget-type": "schema",
+      "widget-attributes": {
+        "schema-types": [
+          "boolean",
+          "int",
+          "long",
+          "float",
+          "double",
+          "string"
+        ],
+        "schema-default-type": "string"
+      }
+    }
+  ]
+}

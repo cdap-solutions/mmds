@@ -1,0 +1,138 @@
+{
+    "name": "trainer_gbt_v2",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "5.0.0-SNAPSHOT",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "resources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "connections": [
+            {
+                "from": "File",
+                "to": "Wrangler"
+            },
+            {
+                "from": "Wrangler",
+                "to": "ModelTrainer"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "engine": "mapreduce",
+        "stages": [
+            {
+                "name": "File",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "File",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "2.0.0-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "recursive": "false",
+                        "filenameOnly": "false",
+                        "ignoreNonExistingFolders": "false",
+                        "referenceName": "re",
+                        "path": "/Users/ashau/dev/spikes/ml-plugins/src/test/resources/sales.txt"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                "type": "batchsource",
+                "label": "File",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.1.0-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "*",
+                        "precondition": "false",
+                        "threshold": "1",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"price\",\"type\":[\"double\",\"null\"]},{\"name\":\"city\",\"type\":[\"string\",\"null\"]},{\"name\":\"zip\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"beds\",\"type\":[\"string\",\"null\"]},{\"name\":\"baths\",\"type\":[\"string\",\"null\"]},{\"name\":\"size\",\"type\":[\"double\",\"null\"]},{\"name\":\"lot\",\"type\":[\"double\",\"null\"]},{\"name\":\"stories\",\"type\":[\"string\",\"null\"]},{\"name\":\"builtin\",\"type\":[\"double\",\"null\"]}]}",
+                        "directives": "parse-as-csv :body '\\t' false\ndrop body\nrename body_1 price\nrename body_2 street\nrename body_3 city\nrename body_4 state\nrename body_5 zip\nrename body_6 type\nrename body_7 beds\nrename body_8 baths\nrename body_9 size\nrename body_10 lot\nrename body_11 stories\nrename body_12 builtin\nrename body_13 saledate\nset-type :price double\nfill-null-or-empty :builtin '-1'\nset-type :builtin double\nfill-null-or-empty :size 0\nset-type :size double\nfill-null-or-empty :lot 0\nset-type :lot double\ndrop street\ndrop state\ndrop saledate"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"price\",\"type\":[\"double\",\"null\"]},{\"name\":\"city\",\"type\":[\"string\",\"null\"]},{\"name\":\"zip\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"beds\",\"type\":[\"string\",\"null\"]},{\"name\":\"baths\",\"type\":[\"string\",\"null\"]},{\"name\":\"size\",\"type\":[\"double\",\"null\"]},{\"name\":\"lot\",\"type\":[\"double\",\"null\"]},{\"name\":\"stories\",\"type\":[\"string\",\"null\"]},{\"name\":\"builtin\",\"type\":[\"double\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "File",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "Wrangler",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "350px"
+                }
+            },
+            {
+                "name": "ModelTrainer",
+                "plugin": {
+                    "name": "ModelTrainer",
+                    "type": "sparksink",
+                    "label": "ModelTrainer",
+                    "artifact": {
+                        "name": "ml-plugins",
+                        "version": "1.0.0-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "outcomeIsCategorical": "false",
+                        "overwrite": "true",
+                        "experimentId": "realestate",
+                        "modelId": "gbt",
+                        "outcomeField": "price",
+                        "algorithm": "gradient.boosted.tree.regression",
+                        "predictionsDataset": "re-gbt-predictions"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"price\",\"type\":[\"string\",\"null\"]},{\"name\":\"street\",\"type\":[\"string\",\"null\"]},{\"name\":\"city\",\"type\":[\"string\",\"null\"]},{\"name\":\"state\",\"type\":[\"string\",\"null\"]},{\"name\":\"zip\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"beds\",\"type\":[\"string\",\"null\"]},{\"name\":\"baths\",\"type\":[\"string\",\"null\"]},{\"name\":\"size\",\"type\":[\"string\",\"null\"]},{\"name\":\"lot\",\"type\":[\"string\",\"null\"]},{\"name\":\"stories\",\"type\":[\"string\",\"null\"]},{\"name\":\"builtin\",\"type\":[\"string\",\"null\"]},{\"name\":\"saledate\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"price\",\"type\":[\"double\",\"null\"]},{\"name\":\"city\",\"type\":[\"string\",\"null\"]},{\"name\":\"zip\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"beds\",\"type\":[\"string\",\"null\"]},{\"name\":\"baths\",\"type\":[\"string\",\"null\"]},{\"name\":\"size\",\"type\":[\"double\",\"null\"]},{\"name\":\"lot\",\"type\":[\"double\",\"null\"]},{\"name\":\"stories\",\"type\":[\"string\",\"null\"]},{\"name\":\"builtin\",\"type\":[\"double\",\"null\"]}]}"
+                    }
+                ],
+                "type": "sparksink",
+                "label": "ModelTrainer",
+                "icon": "fa-plug",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "650px"
+                }
+            }
+        ],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": true,
+        "maxConcurrentRuns": 1
+    }
+}
