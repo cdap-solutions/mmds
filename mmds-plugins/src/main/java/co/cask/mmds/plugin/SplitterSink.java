@@ -86,14 +86,14 @@ public class SplitterSink extends SparkSink<StructuredRecord> {
     JavaRDD<Row> rowRDD = javaRDD.map(new RecordToRow(rowType));
 
     // convert RDD to DataFrame
-    Dataset<Row> rawData = sqlContext.createDataFrame(rowRDD, rowType);
+    Dataset<Row> rawData = sqlContext.createDataFrame(rowRDD, rowType).cache();
 
     long start = TimeUnit.SECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 
     double[] splitWeights = new double[] { 100 - conf.getTestSplitPercentage(), conf.getTestSplitPercentage() };
     Dataset<Row>[] split = rawData.randomSplit(splitWeights);
-    Dataset<Row> trainingSplit = split[0];
-    Dataset<Row> testSplit = split[1];
+    Dataset<Row> trainingSplit = split[0].cache();
+    Dataset<Row> testSplit = split[1].cache();
 
     Location trainingLocation = splitLocation.append("train");
     Location testLocation = splitLocation.append("test");
