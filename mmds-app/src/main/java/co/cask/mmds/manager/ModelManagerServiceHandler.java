@@ -36,24 +36,22 @@ import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.Experiment;
 import co.cask.mmds.data.ExperimentMetaTable;
 import co.cask.mmds.data.ExperimentStore;
-import co.cask.mmds.data.Model;
 import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
-import co.cask.mmds.data.ModelStatus;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.manager.runner.AlgorithmSpec;
 import co.cask.mmds.manager.runner.PipelineExecutor;
 import co.cask.mmds.modeler.Modelers;
-import co.cask.mmds.modeler.param.ModelerParams;
 import co.cask.mmds.modeler.param.spec.ParamSpec;
 import co.cask.mmds.modeler.train.ModelOutput;
 import co.cask.mmds.modeler.train.ModelOutputWriter;
 import co.cask.mmds.modeler.train.ModelTrainer;
 import co.cask.mmds.proto.BadRequestException;
+import co.cask.mmds.proto.CreateModelRequest;
 import co.cask.mmds.proto.EndpointException;
-import com.google.common.base.Joiner;
+import co.cask.mmds.proto.TrainModelRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
@@ -228,30 +226,38 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/experiments/{experiment-name}/models")
   public void addModel(HttpServiceRequest request, HttpServiceResponder responder,
                        @PathParam("experiment-name") final String experimentName) throws Exception {
-    ModelTrainerInfo trainerInfo = callInTx(responder, store -> {
-      Model modelInfo = GSON.fromJson(Bytes.toString(request.getContent()), Model.class);
-      try {
-        modelInfo.validate();
-      } catch (IllegalArgumentException e) {
-        throw new BadRequestException(e.getMessage());
-      }
-      Modeler modeler = Modelers.getModeler(modelInfo.getAlgorithm());
-      if (modeler == null) {
-        throw new BadRequestException(
-          String.format("No modeler found for algorithm '%s'. Must be one of '%s'",
-                        modelInfo.getAlgorithm(), Joiner.on(',').join(Modelers.getAlgorithms())));
-      }
-      ModelerParams params = modeler.getParams(modelInfo.getHyperparameters());
+    runInTx(responder, store -> {
+      CreateModelRequest createRequest = GSON.fromJson(Bytes.toString(request.getContent()), CreateModelRequest.class);
+      createRequest.validate();
+      String modelId = store.addModel(experimentName, createRequest);
+      responder.sendString(GSON.toJson(new Id(modelId)));
+    });
+  }
 
-      Model validatedInfo = Model.builder()
-        .setName(modelInfo.getName())
-        .setDescription(modelInfo.getDescription())
-        .setAlgorithm(modelInfo.getAlgorithm())
-        .setSplit(modelInfo.getSplit())
-        .setPredictionsDataset(modelInfo.getPredictionsDataset())
-        .setHyperParameters(params.toMap())
-        .build();
-      return store.addModel(experimentName, validatedInfo);
+  @PUT
+  @Path("/experiments/{experiment-name}/models/{model-id}/split")
+  public void setModelSplit(HttpServiceRequest request, HttpServiceResponder responder,
+                            @PathParam("experiment-name") final String experimentName,
+                            @PathParam("model-id") final String modelId) throws Exception {
+    runInTx(responder, store -> {
+      Id splitId = GSON.fromJson(Bytes.toString(request.getContent()), Id.class);
+      store.setModelSplit(new ModelKey(experimentName, modelId), splitId.getId());
+      responder.sendStatus(200);
+    });
+  }
+
+  @POST
+  @Path("/experiments/{experiment-name}/models/{model-id}/train")
+  public void trainModel(HttpServiceRequest request, HttpServiceResponder responder,
+                         @PathParam("experiment-name") final String experimentName,
+                         @PathParam("model-id") final String modelId) throws Exception {
+    ModelTrainerInfo trainerInfo = callInTx(responder, store -> {
+      TrainModelRequest trainRequest = GSON.fromJson(Bytes.toString(request.getContent()), TrainModelRequest.class);
+      trainRequest.validate();
+
+      ModelKey modelKey = new ModelKey(experimentName, modelId);
+
+      return store.trainModel(modelKey, trainRequest);
     });
 
     // happens if there was an error above
@@ -260,7 +266,6 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     }
 
     ModelKey modelKey = new ModelKey(trainerInfo.getExperiment().getName(), trainerInfo.getModelId());
-    runInTx(responder, store -> store.setModelStatus(modelKey, ModelStatus.TRAINING));
 
     new Thread(() -> {
       ModelLogging.start(modelKey.getExperiment(), modelKey.getModel());
@@ -292,7 +297,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
       } catch (Exception e) {
         LOG.error("Error training model {} in experiment {}.", modelKey.getModel(), modelKey.getExperiment(), e);
         try {
-          runInTx(store -> store.setModelStatus(modelKey, ModelStatus.FAILED));
+          runInTx(store -> store.modelFailed(modelKey));
         } catch (TransactionFailureException te) {
           LOG.error("Error marking model {} in experiment {} as failed",
                     modelKey.getModel(), modelKey.getExperiment(), te);
@@ -442,8 +447,10 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
           }
         });
     } catch (TransactionFailureException e) {
-      LOG.error("Error during service call:", e);
+      LOG.error("Transaction failure during service call", e);
       responder.sendError(500, e.getMessage());
+    } catch (Throwable t) {
+      LOG.error("Error", t);
     }
   }
 

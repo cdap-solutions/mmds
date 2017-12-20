@@ -52,7 +52,6 @@ import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.Experiment;
 import co.cask.mmds.data.ExperimentStats;
 import co.cask.mmds.data.HistogramBin;
-import co.cask.mmds.data.Model;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelStatus;
 import co.cask.mmds.data.SplitKey;
@@ -60,6 +59,8 @@ import co.cask.mmds.manager.Id;
 import co.cask.mmds.manager.ModelManagerService;
 import co.cask.mmds.manager.ModelPrepApp;
 import co.cask.mmds.plugin.MLPredictor;
+import co.cask.mmds.proto.CreateModelRequest;
+import co.cask.mmds.proto.TrainModelRequest;
 import co.cask.mmds.stats.CategoricalHisto;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -79,6 +80,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -220,14 +222,13 @@ public class PipelineTest extends HydratorTestBase {
         throw new RuntimeException(e);
       }
     });
+    CreateModelRequest createModelRequest = new CreateModelRequest("dtree", "decision tree classifier");
+    String modelId = createModel(experiment.getName(), createModelRequest);
 
-    // add the model
-    Model model = Model.builder()
-      .setName("dtree")
-      .setAlgorithm("decision.tree.classifier")
-      .setSplit(splitStats.getId())
-      .build();
-    ModelMeta meta = trainModel(experiment.getName(), model, 240);
+    assignSplit(experiment.getName(), modelId, splitStats.getId());
+
+    TrainModelRequest trainRequest = new TrainModelRequest("decision.tree.classifier", null, new HashMap<>());
+    ModelMeta meta = trainModel(experiment.getName(), modelId, trainRequest, 240);
 
     Assert.assertNotNull(meta.getEvaluationMetrics().getPrecision());
     Assert.assertNotNull(meta.getEvaluationMetrics().getRecall());
@@ -370,13 +371,13 @@ public class PipelineTest extends HydratorTestBase {
         throw new RuntimeException(e);
       }
     });
+    CreateModelRequest createModelRequest = new CreateModelRequest("dtree", "decision tree regression");
+    String modelId = createModel(experiment.getName(), createModelRequest);
 
-    Model model = Model.builder()
-      .setName("dtree")
-      .setSplit(splitStats.getId())
-      .setAlgorithm("decision.tree.regression")
-      .build();
-    ModelMeta meta = trainModel(experiment.getName(), model, 240);
+    assignSplit(experiment.getName(), modelId, splitStats.getId());
+
+    TrainModelRequest trainRequest = new TrainModelRequest("decision.tree.regression", null, new HashMap<>());
+    ModelMeta meta = trainModel(experiment.getName(), modelId, trainRequest, 240);
 
     Assert.assertNotNull(meta.getEvaluationMetrics().getRmse());
     Assert.assertNotNull(meta.getEvaluationMetrics().getR2());
@@ -465,6 +466,10 @@ public class PipelineTest extends HydratorTestBase {
 
   @Test
   public void testSplitter() throws Exception {
+    Experiment experiment = new Experiment("exid", "some experiment", "dummypath", "price",
+                                           Schema.Type.DOUBLE.name(), "workspace1");
+    putExperiment(experiment);
+
     Schema schema = Schema.recordOf(
       "x",
       Schema.Field.of("int", Schema.nullableOf(Schema.of(Schema.Type.INT))),
@@ -478,7 +483,7 @@ public class PipelineTest extends HydratorTestBase {
       .setType("random")
       .setSchema(schema)
       .build();
-    DataSplitStats stats = splitWithPipeline("exid", dataSplit, inputManager -> {
+    DataSplitStats stats = splitWithPipeline(experiment.getName(), dataSplit, inputManager -> {
       List<StructuredRecord> input = new ArrayList<>();
       for (int i = 1; i <= 100; i++) {
         StructuredRecord.Builder builder = StructuredRecord.builder(schema);
@@ -600,15 +605,34 @@ public class PipelineTest extends HydratorTestBase {
     throw new TimeoutException("Timed out waiting for split.");
   }
 
-  private static ModelMeta trainModel(String experiment, Model model, int timeoutSeconds) throws Exception {
+  private static String createModel(String experiment, CreateModelRequest createModelRequest) throws IOException {
     URL url = new URL(serviceURL + "/experiments/" + experiment + "/models");
     HttpRequest request = HttpRequest.post(url)
-      .withBody(GSON.toJson(model))
+      .withBody(GSON.toJson(createModelRequest))
       .build();
     HttpResponse response = HttpRequests.execute(request);
     Assert.assertEquals(200, response.getResponseCode());
     Id modelIdObj = GSON.fromJson(response.getResponseBodyAsString(), Id.class);
-    String modelId = modelIdObj.getId();
+    return modelIdObj.getId();
+  }
+
+  private void assignSplit(String experiment, String modelId, String splitId) throws IOException {
+    URL url = new URL(serviceURL + "/experiments/" + experiment + "/models/" + modelId + "/split");
+    HttpRequest request = HttpRequest.put(url)
+      .withBody(GSON.toJson(new Id(splitId)))
+      .build();
+    HttpResponse response = HttpRequests.execute(request);
+    Assert.assertEquals(200, response.getResponseCode());
+  }
+
+  private static ModelMeta trainModel(String experiment, String modelId, TrainModelRequest trainRequest,
+                                      int timeoutSeconds) throws Exception {
+    URL url = new URL(serviceURL + "/experiments/" + experiment + "/models/" + modelId + "/train");
+    HttpRequest request = HttpRequest.post(url)
+      .withBody(GSON.toJson(trainRequest))
+      .build();
+    HttpResponse response = HttpRequests.execute(request);
+    Assert.assertEquals(200, response.getResponseCode());
 
     long start = System.currentTimeMillis();
     url = new URL(serviceURL + "/experiments/" + experiment + "/models/" + modelId);
@@ -616,7 +640,7 @@ public class PipelineTest extends HydratorTestBase {
     while (TimeUnit.SECONDS.convert(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS) <= timeoutSeconds) {
       response = HttpRequests.execute(request);
       ModelMeta modelMeta = GSON.fromJson(response.getResponseBodyAsString(), ModelMeta.class);
-      if (modelMeta.getStatus() == ModelStatus.FAILED) {
+      if (modelMeta.getStatus() == ModelStatus.TRAINING_FAILED) {
         throw new Exception("Model failed to train.");
       } else if (modelMeta.getStatus() == ModelStatus.TRAINED) {
         return modelMeta;

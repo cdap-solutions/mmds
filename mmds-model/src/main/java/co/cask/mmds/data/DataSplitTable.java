@@ -46,6 +46,7 @@ public class DataSplitTable {
   private static final String TRAIN_PATH = "train.path";
   private static final String TEST_STATS = "test.stats";
   private static final String TRAIN_STATS = "train.stats";
+  private static final String STATUS = "status";
   public static final DatasetProperties DATASET_PROPERTIES = PartitionedFileSetProperties.builder()
     .setPartitioning(Partitioning.builder().addStringField(EXPERIMENT).addStringField(SPLIT).build())
     .setEnableExploreOnCreate(false)
@@ -68,6 +69,7 @@ public class DataSplitTable {
     meta.put(PARAMS, GSON.toJson(dataSplit.getParams()));
     meta.put(DIRECTIVES, GSON.toJson(dataSplit.getDirectives()));
     meta.put(SCHEMA, dataSplit.getSchema().toString());
+    meta.put(STATUS, SplitStatus.SPLITTING.name());
 
     partitionOutput.setMetadata(meta);
     partitionOutput.addPartition();
@@ -143,6 +145,7 @@ public class DataSplitTable {
     updates.put(TEST_PATH, testPath);
     updates.put(TRAIN_STATS, GSON.toJson(trainingStats));
     updates.put(TEST_STATS, GSON.toJson(testStats));
+    updates.put(STATUS, SplitStatus.COMPLETE.name());
     splits.setMetadata(key, updates);
   }
 
@@ -221,7 +224,8 @@ public class DataSplitTable {
       .setDirectives(directives)
       .setSchema(schema)
       .setTrainingPath(meta.get(TRAIN_PATH))
-      .setTestPath(meta.get(TEST_PATH));
+      .setTestPath(meta.get(TEST_PATH))
+      .setStatus(SplitStatus.valueOf(meta.get(STATUS)));
 
     if (!excludeStats) {
       String trainStatsStr = meta.get(TRAIN_STATS);

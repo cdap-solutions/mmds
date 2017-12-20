@@ -7,14 +7,20 @@ import co.cask.cdap.api.annotation.Plugin;
 import co.cask.cdap.api.data.format.StructuredRecord;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.dataset.lib.PartitionedFileSet;
+import co.cask.cdap.api.dataset.table.Table;
 import co.cask.cdap.api.plugin.PluginConfig;
 import co.cask.cdap.api.spark.sql.DataFrames;
 import co.cask.cdap.etl.api.batch.SparkExecutionPluginContext;
 import co.cask.cdap.etl.api.batch.SparkPluginContext;
 import co.cask.cdap.etl.api.batch.SparkSink;
+import co.cask.mmds.Constants;
 import co.cask.mmds.data.ColumnStats;
+import co.cask.mmds.data.DataSplitStats;
 import co.cask.mmds.data.DataSplitTable;
+import co.cask.mmds.data.ExperimentMetaTable;
+import co.cask.mmds.data.ExperimentStore;
 import co.cask.mmds.data.HistogramBin;
+import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.stats.CategoricalHisto;
 import co.cask.mmds.stats.Histograms;
@@ -22,7 +28,6 @@ import co.cask.mmds.stats.NumericHisto;
 import co.cask.mmds.stats.NumericStats;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -33,11 +38,9 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.twill.filesystem.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -71,12 +74,17 @@ public class SplitterSink extends SparkSink<StructuredRecord> {
     }
     SQLContext sqlContext = new SQLContext(context.getSparkContext().sc());
 
-    PartitionedFileSet splitsDataset = context.getDataset(conf.getSplitDataset());
-    DataSplitTable dataSplitTable = new DataSplitTable(splitsDataset);
+
+    Table modelMeta = context.getDataset(Constants.Dataset.MODEL_META);
+    Table experiments = context.getDataset(Constants.Dataset.EXPERIMENTS_META);
+    PartitionedFileSet splits = context.getDataset(Constants.Dataset.SPLITS);
+    DataSplitTable dataSplitTable = new DataSplitTable(splits);
+    ExperimentStore store = new ExperimentStore(
+      new ExperimentMetaTable(experiments), dataSplitTable, new ModelTable(modelMeta));
 
     SplitKey key = new SplitKey(conf.getExperimentId(), conf.getSplitId());
-    Location splitLocation = dataSplitTable.getLocation(key);
-    if (splitLocation == null) {
+    DataSplitStats splitStats = store.getSplit(key);
+    if (splitStats == null) {
       throw new IllegalArgumentException(String.format("Split '%s' in Experiment '%s' does not exist.",
                                                        conf.getSplitId(), conf.getExperimentId()));
     }
@@ -94,6 +102,8 @@ public class SplitterSink extends SparkSink<StructuredRecord> {
     Dataset<Row>[] split = rawData.randomSplit(splitWeights);
     Dataset<Row> trainingSplit = split[0].cache();
     Dataset<Row> testSplit = split[1].cache();
+
+    Location splitLocation = dataSplitTable.getLocation(key);
 
     Location trainingLocation = splitLocation.append("train");
     Location testLocation = splitLocation.append("test");
@@ -118,7 +128,7 @@ public class SplitterSink extends SparkSink<StructuredRecord> {
     LOG.info("Time to get test stats = {} seconds, {} minutes",
              testStatsEnd - trainStatsEnd, TimeUnit.MINUTES.convert(testStatsEnd - trainStatsEnd, TimeUnit.SECONDS));
 
-    dataSplitTable.updateStats(key, trainingPath, testPath, trainingStats, testStats);
+    store.finishSplit(key, trainingPath, testPath, trainingStats, testStats);
   }
 
   private Map<String, ColumnStats> getStats(Dataset<Row> split, Schema schema) {
