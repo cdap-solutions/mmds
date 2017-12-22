@@ -29,11 +29,15 @@ public class ToCatHisto implements PairFlatMapFunction<Row, String, CategoricalH
       Map<String, Long> counts = new HashMap<>();
       String val = row.getAs(column);
       long nullCount = 1L;
+      long emptyCount = 0L;
       if (val != null) {
         counts.put(val, 1L);
         nullCount = 0L;
+        if (val.isEmpty()) {
+          emptyCount = 1L;
+        }
       }
-      CategoricalHisto histo = new CategoricalHisto(1L, nullCount, counts);
+      CategoricalHisto histo = new CategoricalHisto(1L, nullCount, emptyCount, counts);
       histograms.add(new Tuple2<>(column, histo));
     }
     return histograms.iterator();

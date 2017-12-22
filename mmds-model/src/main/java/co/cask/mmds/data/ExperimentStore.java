@@ -58,13 +58,13 @@ public class ExperimentStore {
   public ExperimentStats getExperimentStats(String experimentName) {
     Experiment experiment = getExperiment(experimentName);
 
-    Map<String, ColumnStats> stats = new HashMap<>();
+    Map<String, ColumnStats> metricStats = new HashMap<>();
     CategoricalHisto algoHisto = new CategoricalHisto();
     CategoricalHisto statusHisto = new CategoricalHisto();
 
     List<ModelMeta> models = listModels(experimentName);
     if (models.isEmpty()) {
-      return new ExperimentStats(experiment, stats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
+      return new ExperimentStats(experiment, metricStats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
     }
 
     Iterator<ModelMeta> modelIter = models.iterator();
@@ -154,28 +154,28 @@ public class ExperimentStore {
     }
 
     if (rmseHisto != null) {
-      stats.put("rmse", new ColumnStats(rmseHisto));
+      metricStats.put("rmse", new ColumnStats(rmseHisto));
     }
     if (r2Histo != null) {
-      stats.put("r2", new ColumnStats(r2Histo));
+      metricStats.put("r2", new ColumnStats(r2Histo));
     }
     if (maeHisto != null) {
-      stats.put("mae", new ColumnStats(maeHisto));
+      metricStats.put("mae", new ColumnStats(maeHisto));
     }
     if (evarianceHisto != null) {
-      stats.put("evariance", new ColumnStats(evarianceHisto));
+      metricStats.put("evariance", new ColumnStats(evarianceHisto));
     }
     if (precisionHisto != null) {
-      stats.put("precision", new ColumnStats(precisionHisto));
+      metricStats.put("precision", new ColumnStats(precisionHisto));
     }
     if (recallHisto != null) {
-      stats.put("recall", new ColumnStats(recallHisto));
+      metricStats.put("recall", new ColumnStats(recallHisto));
     }
     if (f1Histo != null) {
-      stats.put("f1", new ColumnStats(f1Histo));
+      metricStats.put("f1", new ColumnStats(f1Histo));
     }
 
-    return new ExperimentStats(experiment, stats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
+    return new ExperimentStats(experiment, metricStats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
   }
 
   public void putExperiment(Experiment experiment) {
@@ -346,9 +346,8 @@ public class ExperimentStore {
     return stats;
   }
 
-  public void finishSplit(SplitKey splitKey, String trainingPath, String testPath,
-                          Map<String, ColumnStats> trainingStats, Map<String, ColumnStats> testStats) {
-    splits.updateStats(splitKey, trainingPath, testPath, trainingStats, testStats);
+  public void finishSplit(SplitKey splitKey, String trainingPath, String testPath, List<ColumnSplitStats> stats) {
+    splits.updateStats(splitKey, trainingPath, testPath, stats);
     DataSplitStats splitStats = getSplit(splitKey);
     for (String modelId : splitStats.getModels()) {
       models.setStatus(new ModelKey(splitKey.getExperiment(), modelId), ModelStatus.DATA_READY);

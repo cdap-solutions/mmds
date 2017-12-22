@@ -58,4 +58,14 @@ public class NumericBin implements Serializable {
   public boolean isHiInclusive() {
     return hiInclusive;
   }
+
+  @Override
+  public String toString() {
+    return "NumericBin{" +
+      "lo=" + lo +
+      ", hi=" + hi +
+      ", hiInclusive=" + hiInclusive +
+      ", count=" + count +
+      '}';
+  }
 }

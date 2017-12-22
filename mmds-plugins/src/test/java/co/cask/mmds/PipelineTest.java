@@ -45,15 +45,15 @@ import co.cask.cdap.test.WorkflowManager;
 import co.cask.common.http.HttpRequest;
 import co.cask.common.http.HttpRequests;
 import co.cask.common.http.HttpResponse;
-import co.cask.mmds.data.ColumnStats;
+import co.cask.mmds.data.ColumnSplitStats;
 import co.cask.mmds.data.DataSplit;
 import co.cask.mmds.data.DataSplitStats;
 import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.Experiment;
 import co.cask.mmds.data.ExperimentStats;
-import co.cask.mmds.data.HistogramBin;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelStatus;
+import co.cask.mmds.data.SplitHistogramBin;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.manager.Id;
 import co.cask.mmds.manager.ModelManagerService;
@@ -507,17 +507,13 @@ public class PipelineTest extends HydratorTestBase {
 
     Assert.assertNotNull(stats.getTrainingPath());
     Assert.assertNotNull(stats.getTestPath());
-    for (Schema.Field field : schema.getFields()) {
-      String fieldName = field.getName();
-      ColumnStats trainingStats = stats.getTrainingStats().get(fieldName);
-      ColumnStats testStats = stats.getTestStats().get(fieldName);
-      long totalNulls = trainingStats.getNullCount() + testStats.getNullCount();
-      long totalCount = trainingStats.getTotalCount() + testStats.getTotalCount();
+
+    for (ColumnSplitStats columnSplitStats : stats.getStats()) {
+      long totalNulls = columnSplitStats.getNumNull().getTrain() + columnSplitStats.getNumNull().getTest();
+      long totalCount = columnSplitStats.getNumTotal().getTrain() + columnSplitStats.getNumTotal().getTest();
       Assert.assertEquals(100, totalCount);
       Assert.assertEquals(10, totalNulls);
-
-      checkHistoCount(trainingStats);
-      checkHistoCount(testStats);
+      checkHistoCount(columnSplitStats);
     }
   }
 
@@ -552,12 +548,16 @@ public class PipelineTest extends HydratorTestBase {
     return dataSplitTable.get(new SplitKey(experiment, splitId));
   }
 
-  private void checkHistoCount(ColumnStats columnStats) {
-    long histoCount = 0L;
-    for (HistogramBin bin : columnStats.getHisto()) {
-      histoCount += bin.getCount();
+  private void checkHistoCount(ColumnSplitStats columnSplitStats) {
+    long trainCount = 0L;
+    long testCount = 0L;
+    for (SplitHistogramBin bin : columnSplitStats.getHisto()) {
+      trainCount += bin.getCount().getTrain();
+      testCount += bin.getCount().getTest();
     }
-    Assert.assertEquals(columnStats.getTotalCount() - columnStats.getNullCount(), histoCount);
+    Assert.assertEquals(columnSplitStats.getNumTotal().getTrain() - columnSplitStats.getNumNull().getTrain(),
+                        trainCount);
+    Assert.assertEquals(columnSplitStats.getNumTotal().getTest() - columnSplitStats.getNumNull().getTest(), testCount);
   }
 
   private static void putExperiment(Experiment experiment) throws IOException {

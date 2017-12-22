@@ -47,4 +47,20 @@ public class NumericHistoTest {
     Assert.assertTrue(histo.getBins().get(9).getHi() >= 9876543210000d);
   }
 
+  @Test
+  public void testStats() {
+    NumericHisto histo1 = new NumericHisto(1d, 10d, 10, 1d);
+    NumericHisto histo2 = new NumericHisto(1d, 10d, 10, 2d);
+    NumericHisto histo3 = new NumericHisto(1d, 10d, 10, 3d);
+    NumericHisto histo4 = new NumericHisto(1d, 10d, 10, 4d);
+
+    NumericHisto histo1_2 = histo1.merge(histo2);
+    NumericHisto histo3_4 = histo3.merge(histo4);
+
+    NumericHisto histo = histo1_2.merge(histo3_4);
+
+    Assert.assertEquals(2.5d, histo.getMean(), 0.0000001d);
+    Assert.assertEquals(1.1180339887499d, histo.getStddev(), 0.0000001d);
+  }
+
 }

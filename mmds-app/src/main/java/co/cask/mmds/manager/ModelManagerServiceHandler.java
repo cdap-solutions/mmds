@@ -449,8 +449,6 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     } catch (TransactionFailureException e) {
       LOG.error("Transaction failure during service call", e);
       responder.sendError(500, e.getMessage());
-    } catch (Throwable t) {
-      LOG.error("Error", t);
     }
   }
 

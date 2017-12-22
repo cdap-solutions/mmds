@@ -32,7 +32,7 @@ public class DataSplitTable {
   private static final Type SET_TYPE = new TypeToken<Set<String>>() { }.getType();
   private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() { }.getType();
   private static final Type LIST_TYPE = new TypeToken<List<String>>() { }.getType();
-  private static final Type STATS_TYPE = new TypeToken<Map<String, ColumnStats>>() { }.getType();
+  private static final Type STATS_TYPE = new TypeToken<List<ColumnSplitStats>>() { }.getType();
   private static final Gson GSON = new Gson();
   private static final String EXPERIMENT = "exp";
   private static final String SPLIT = "split";
@@ -44,8 +44,7 @@ public class DataSplitTable {
   private static final String SCHEMA = "schema";
   private static final String TEST_PATH = "test.path";
   private static final String TRAIN_PATH = "train.path";
-  private static final String TEST_STATS = "test.stats";
-  private static final String TRAIN_STATS = "train.stats";
+  private static final String STATS = "stats";
   private static final String STATUS = "status";
   public static final DatasetProperties DATASET_PROPERTIES = PartitionedFileSetProperties.builder()
     .setPartitioning(Partitioning.builder().addStringField(EXPERIMENT).addStringField(SPLIT).build())
@@ -134,17 +133,14 @@ public class DataSplitTable {
    * @param splitKey the split to update
    * @param trainingPath path to training data
    * @param testPath path to test data
-   * @param trainingStats stats about the training data
-   * @param testStats stats about the test data
+   * @param stats stats about the training and test data
    */
-  public void updateStats(SplitKey splitKey, String trainingPath, String testPath,
-                          Map<String, ColumnStats> trainingStats, Map<String, ColumnStats> testStats) {
+  public void updateStats(SplitKey splitKey, String trainingPath, String testPath, List<ColumnSplitStats> stats) {
     PartitionKey key = getKey(splitKey);
     Map<String, String> updates = new HashMap<>();
     updates.put(TRAIN_PATH, trainingPath);
     updates.put(TEST_PATH, testPath);
-    updates.put(TRAIN_STATS, GSON.toJson(trainingStats));
-    updates.put(TEST_STATS, GSON.toJson(testStats));
+    updates.put(STATS, GSON.toJson(stats));
     updates.put(STATUS, SplitStatus.COMPLETE.name());
     splits.setMetadata(key, updates);
   }
@@ -228,17 +224,12 @@ public class DataSplitTable {
       .setStatus(SplitStatus.valueOf(meta.get(STATUS)));
 
     if (!excludeStats) {
-      String trainStatsStr = meta.get(TRAIN_STATS);
-      String testStatsStr = meta.get(TEST_STATS);
-      Map<String, ColumnStats> trainStats = new HashMap<>();
-      if (trainStatsStr != null) {
-        trainStats = GSON.fromJson(trainStatsStr, STATS_TYPE);
+      String statsStr = meta.get(STATS);
+      List<ColumnSplitStats> stats = new ArrayList<>();
+      if (statsStr != null) {
+        stats = GSON.fromJson(statsStr, STATS_TYPE);
       }
-      Map<String, ColumnStats> testStats = new HashMap<>();
-      if (testStatsStr != null) {
-        testStats = GSON.fromJson(testStatsStr, STATS_TYPE);
-      }
-      builder.setTrainingStats(trainStats).setTestStats(testStats);
+      builder.setStats(stats);
     }
     return builder.build();
   }

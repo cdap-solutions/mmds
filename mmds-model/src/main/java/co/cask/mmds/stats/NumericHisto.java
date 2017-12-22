@@ -14,17 +14,27 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
   private final List<NumericBin> bins;
   private Double min;
   private Double max;
+  private Double mean;
+  private Double m2;
+  private Long zeroCount;
+  private Long negativeCount;
+  private Long positiveCount;
 
   public NumericHisto(double min, double max, int maxBins, Double val) {
-    super(1L, val == null ? 1L : 0L);
+    super(0L, 0L);
     this.min = val;
     this.max = val;
     this.bins = new ArrayList<>();
+    this.zeroCount = 0L;
+    this.negativeCount = 0L;
+    this.positiveCount = 0L;
+    this.mean = null;
+    this.m2 = null;
 
     if (min == max) {
       NumericBin bin = new NumericBin(min, max, 0L, true);
-      bin.incrementIfInBin(val);
       bins.add(bin);
+      update(val);
       return;
     }
 
@@ -37,19 +47,26 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
       // double arithmetic is not exact, make sure final bin always includes the max.
       hi = numBins == maxBins ? Math.max(hi, max) : hi;
       NumericBin bin = new NumericBin(lo, hi, 0L, hi >= max);
-      bin.incrementIfInBin(val);
       bins.add(bin);
       lo = hi;
       hi += step;
       numBins++;
     }
+
+    update(val);
   }
 
-  public NumericHisto(long totalCount, long nullCount, List<NumericBin> bins, Double min, Double max) {
+  private NumericHisto(long totalCount, long nullCount, List<NumericBin> bins, Double min, Double max, Double mean,
+                       Double m2, Long zeroCount, Long negativeCount, Long positiveCount) {
     super(totalCount, nullCount);
-    this.bins = new ArrayList<>(bins);
+    this.bins = bins;
     this.min = min;
     this.max = max;
+    this.mean = mean;
+    this.m2 = m2;
+    this.zeroCount = zeroCount;
+    this.negativeCount = negativeCount;
+    this.positiveCount = positiveCount;
   }
 
   /**
@@ -86,12 +103,33 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
     return max;
   }
 
+  public Double getMean() {
+    return mean;
+  }
+
+  public Double getStddev() {
+    return m2 == null ? null : Math.sqrt(m2 / (totalCount - nullCount));
+  }
+
+  public Long getZeroCount() {
+    return zeroCount;
+  }
+
+  public Long getNegativeCount() {
+    return negativeCount;
+  }
+
+  public Long getPositiveCount() {
+    return positiveCount;
+  }
+
   public void update(Double val) {
     totalCount++;
     if (val == null) {
       nullCount++;
       return;
     }
+
     if (min == null) {
       min = val;
     } else {
@@ -102,6 +140,27 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
     } else {
       max = Math.max(max, val);
     }
+
+    if (val == 0d) {
+      zeroCount++;
+    } else if (val > 0d) {
+      positiveCount++;
+    } else {
+      negativeCount++;
+    }
+
+    if (mean == null) {
+      mean = val;
+      m2 = 0d;
+    } else {
+      // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
+      long numNonNull = totalCount - nullCount;
+      double delta = val - mean;
+      mean += delta / numNonNull;
+      double delta2 = val - mean;
+      m2 += delta * delta2;
+    }
+
     for (NumericBin bin : bins) {
       if (bin.incrementIfInBin(val)) {
         return;
@@ -117,6 +176,7 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
     while (h1Iter.hasNext()) {
       merged.add(h1Iter.next().merge(h2Iter.next()));
     }
+
     Double newMin;
     Double newMax;
     if (min != null && other.min != null) {
@@ -134,6 +194,43 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
       newMax = max;
     }
 
-    return new NumericHisto(totalCount + other.totalCount, nullCount + other.nullCount, merged, newMin, newMax);
+    long newTotalCount = totalCount + other.totalCount;
+    long newNullCount = nullCount + other.nullCount;
+    long newZeroCount = zeroCount + other.zeroCount;
+    long newPositiveCount = positiveCount + other.positiveCount;
+    long newNegativeCount = negativeCount + other.negativeCount;
+
+    long nonNullCount = totalCount - nullCount;
+    long otherNonNullCount = other.totalCount - other.nullCount;
+    long totalNonNullCount = nonNullCount + otherNonNullCount;
+    Double newMean;
+    if (mean == null && other.mean == null) {
+      newMean = null;
+    } else if (mean == null) {
+      newMean = other.mean;
+    } else if (other.mean == null) {
+      newMean = mean;
+    } else {
+      newMean = mean * nonNullCount + other.mean * otherNonNullCount;
+      newMean /= totalNonNullCount;
+    }
+
+    Double newM2;
+    if (m2 == null && other.m2 == null) {
+      newM2 = null;
+    } else if (m2 == null) {
+      newM2 = other.m2;
+    } else if (other.m2 == null) {
+      newM2 = m2;
+    } else {
+      newM2 = m2 + other.m2 + nonNullCount * square(mean - newMean) + otherNonNullCount * square(other.mean - newMean);
+    }
+
+    return new NumericHisto(newTotalCount, newNullCount, merged, newMin, newMax, newMean, newM2,
+                            newZeroCount, newNegativeCount, newPositiveCount);
+  }
+
+  private double square(double x) {
+    return x * x;
   }
 }

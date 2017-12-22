@@ -5,11 +5,11 @@ import java.util.Objects;
 /**
  * A bin in a histogram.
  */
-public class HistogramBin {
+public class SplitHistogramBin {
   private final String bin;
-  private final long count;
+  private final SplitVal<Long> count;
 
-  public HistogramBin(String bin, long count) {
+  public SplitHistogramBin(String bin, SplitVal<Long> count) {
     this.bin = bin;
     this.count = count;
   }
@@ -18,7 +18,7 @@ public class HistogramBin {
     return bin;
   }
 
-  public long getCount() {
+  public SplitVal<Long> getCount() {
     return count;
   }
 
@@ -31,7 +31,7 @@ public class HistogramBin {
       return false;
     }
 
-    HistogramBin that = (HistogramBin) o;
+    SplitHistogramBin that = (SplitHistogramBin) o;
 
     return Objects.equals(bin, that.bin) && Objects.equals(count, that.count);
   }
