@@ -34,7 +34,9 @@ import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelStatus;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.SplitKey;
+import co.cask.mmds.data.SplitStatus;
 import co.cask.mmds.manager.ModelPrepApp;
+import co.cask.mmds.proto.CreateModelRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -98,87 +100,70 @@ public class StoreTest extends TestBaseWithSpark2 {
     DataSetManager<Table> manager = getDataset(Constants.Dataset.MODEL_META);
     ModelTable modelTable = new ModelTable(manager.get());
 
-    String experiment1 = "e1";
-    String experiment2 = "e2";
+    Experiment experiment1 = new Experiment("e1", "", "path", "o1", "string", "workspace");
+    Experiment experiment2 = new Experiment("e2", "", "path", "o1", "string", "workspace");
 
-    Assert.assertNull(modelTable.get(new ModelKey(experiment1, "abc")));
-    Assert.assertTrue(modelTable.list(experiment1).isEmpty());
-    Assert.assertTrue(modelTable.list(experiment2).isEmpty());
+    Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), "abc")));
+    Assert.assertTrue(modelTable.list(experiment1.getName()).isEmpty());
+    Assert.assertTrue(modelTable.list(experiment2.getName()).isEmpty());
 
     long createTs = System.currentTimeMillis();
-    Model model1 = Model.builder()
-      .setDescription("")
-      .setAlgorithm("decision.tree.regression")
-      .setName("model1")
-      .setSplit("split1")
-      .build();
-    String model1Id = modelTable.add(experiment1, "o1", model1, createTs);
+    CreateModelRequest createRequest = new CreateModelRequest("model1", "desc1");
+    String model1Id = modelTable.add(experiment1, createRequest, createTs);
     ModelMeta model1Meta = ModelMeta.builder(model1Id)
-      .setDescription(model1.getDescription())
-      .setAlgorithm(model1.getAlgorithm())
-      .setName(model1.getName())
-      .setSplit(model1.getSplit())
-      .setOutcome("o1")
+      .setDescription(createRequest.getDescription())
+      .setName(createRequest.getName())
+      .setOutcome(experiment1.getOutcome())
       .setCreateTime(createTs)
-      .setDeployTime(-1L)
-      .setStatus(ModelStatus.WAITING)
+      .setStatus(ModelStatus.EMPTY)
       .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
       .build();
 
-    Model model2 = Model.builder()
-      .setDescription("")
-      .setAlgorithm("decision.tree.regression")
-      .setName("model1")
-      .setSplit("split1")
-      .build();
-    String model2Id = modelTable.add(experiment2, "o2", model2, createTs);
+    createRequest = new CreateModelRequest("model2", "desc2");
+    String model2Id = modelTable.add(experiment2, createRequest, createTs);
     ModelMeta model2Meta = ModelMeta.builder(model2Id)
-      .setDescription(model2.getDescription())
-      .setAlgorithm(model2.getAlgorithm())
-      .setName(model2.getName())
-      .setSplit(model2.getSplit())
-      .setOutcome("o2")
+      .setDescription(createRequest.getDescription())
+      .setName(createRequest.getName())
+      .setOutcome(experiment2.getOutcome())
       .setCreateTime(createTs)
-      .setDeployTime(-1L)
-      .setStatus(ModelStatus.WAITING)
+      .setStatus(ModelStatus.EMPTY)
       .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
       .build();
 
-    Assert.assertEquals(ImmutableList.of(model1Meta), modelTable.list(experiment1));
-    Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1, model1Id)));
-    Assert.assertEquals(ImmutableList.of(model2Meta), modelTable.list(experiment2));
-    Assert.assertEquals(model2Meta, modelTable.get(new ModelKey(experiment2, model2Id)));
+    Assert.assertEquals(ImmutableList.of(model1Meta), modelTable.list(experiment1.getName()));
+    Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
+    Assert.assertEquals(ImmutableList.of(model2Meta), modelTable.list(experiment2.getName()));
+    Assert.assertEquals(model2Meta, modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
 
     long trainTs = System.currentTimeMillis();
     List<String> features = ImmutableList.of("f1", "f2");
     Set<String> categoricalFeatures = ImmutableSet.of("f1");
     EvaluationMetrics evaluationMetrics = new EvaluationMetrics(.9d, .8d, .1d);
-    modelTable.update(new ModelKey(experiment1, model1Id), evaluationMetrics, trainTs, features, categoricalFeatures);
+    modelTable.update(new ModelKey(experiment1.getName(), model1Id), evaluationMetrics,
+                      trainTs, features, categoricalFeatures);
     model1Meta = ModelMeta.builder(model1Id)
-      .setDescription(model1.getDescription())
-      .setAlgorithm(model1.getAlgorithm())
-      .setName(model1.getName())
-      .setSplit(model1.getSplit())
+      .setDescription("desc1")
+      .setName("model1")
       .setCreateTime(createTs)
       .setTrainedTime(trainTs)
       .setFeatures(features)
       .setCategoricalFeatures(categoricalFeatures)
       .setEvaluationMetrics(evaluationMetrics)
       .setDeployTime(-1L)
-      .setOutcome("o1")
+      .setOutcome(experiment1.getOutcome())
       .setStatus(ModelStatus.TRAINED)
       .build();
-    Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1, model1Id)));
+    Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
 
-    modelTable.delete(experiment1);
+    modelTable.delete(experiment1.getName());
     manager.flush();
-    Assert.assertTrue(modelTable.list(experiment1).isEmpty());
-    Assert.assertNull(modelTable.get(new ModelKey(experiment1, model1Id)));
-    Assert.assertFalse(modelTable.list(experiment2).isEmpty());
-    modelTable.delete(experiment2);
+    Assert.assertTrue(modelTable.list(experiment1.getName()).isEmpty());
+    Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
+    Assert.assertFalse(modelTable.list(experiment2.getName()).isEmpty());
+    modelTable.delete(experiment2.getName());
     manager.flush();
-    Assert.assertTrue(modelTable.list(experiment2).isEmpty());
-    Assert.assertNull(modelTable.get(new ModelKey(experiment2, model2Id)));
+    Assert.assertTrue(modelTable.list(experiment2.getName()).isEmpty());
+    Assert.assertNull(modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
   }
 
   @Test
@@ -208,6 +193,7 @@ public class StoreTest extends TestBaseWithSpark2 {
       .setParams(split1.getParams())
       .setSchema(split1.getSchema())
       .setType(split1.getType())
+      .setStatus(SplitStatus.SPLITTING)
       .build();
 
     DataSplit split2 = DataSplit.builder()
@@ -225,6 +211,7 @@ public class StoreTest extends TestBaseWithSpark2 {
       .setParams(split2.getParams())
       .setSchema(split2.getSchema())
       .setType(split2.getType())
+      .setStatus(SplitStatus.SPLITTING)
       .build();
 
     Assert.assertEquals(split1Stats, splitTable.get(split1Key));

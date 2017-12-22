@@ -6,11 +6,14 @@ import co.cask.cdap.api.dataset.table.Row;
 import co.cask.cdap.api.dataset.table.Scan;
 import co.cask.cdap.api.dataset.table.Scanner;
 import co.cask.cdap.api.dataset.table.Table;
+import co.cask.mmds.proto.CreateModelRequest;
+import co.cask.mmds.proto.TrainModelRequest;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -163,27 +166,54 @@ public class ModelTable {
    * Add a new model to the specified experiment.
    *
    * @param experiment the experiment to add the model to
-   * @param outcome the outcome the model will predict
-   * @param model the model information
+   * @param createRequest the request to create a model
+   * @param createTs timestamp for when the model was created
    * @return the id for the newly added model
    */
-  public String add(String experiment, String outcome, Model model, long createTs) {
+  public String add(Experiment experiment, CreateModelRequest createRequest, long createTs) {
     String id = UUID.randomUUID().toString().replaceAll("-", "");
-    Put put = new Put(getKey(experiment, id))
-      .add(EXPERIMENT_COL, experiment)
+    Put put = new Put(getKey(experiment.getName(), id))
+      .add(EXPERIMENT_COL, experiment.getName())
       .add(ID_COL, id)
-      .add(NAME_COL, model.getName())
-      .add(DESC_COL, model.getDescription())
-      .add(OUTCOME_COL, outcome)
-      .add(ALGO_COL, model.getAlgorithm())
-      .add(SPLIT_COL, model.getSplit())
-      .add(HYPER_PARAMS_COL, GSON.toJson(model.getHyperparameters()))
+      .add(NAME_COL, createRequest.getName())
+      .add(DESC_COL, createRequest.getDescription())
+      .add(OUTCOME_COL, experiment.getOutcome())
       .add(CREATE_TIME_COL, createTs)
-      .add(STATUS_COL, ModelStatus.WAITING.name())
+      .add(STATUS_COL, ModelStatus.EMPTY.name())
       .add(TRAIN_TIME_COL, -1L)
       .add(DEPLOY_TIME_COL, -1L);
     table.put(put);
     return id;
+  }
+
+  public void setSplit(ModelKey key, DataSplitStats split) {
+    ModelStatus status;
+    switch (split.getStatus()) {
+      case SPLITTING:
+        status = ModelStatus.SPLITTING;
+        break;
+      case FAILED:
+        status = ModelStatus.SPLIT_FAILED;
+        break;
+      case COMPLETE:
+        status = ModelStatus.DATA_READY;
+        break;
+      default:
+        // should never happen
+        throw new IllegalStateException("Unknown split status " + split.getStatus());
+    }
+    Put put = new Put(getKey(key))
+      .add(SPLIT_COL, split.getId())
+      .add(STATUS_COL, status.name());
+    table.put(put);
+  }
+
+  public void setTrainingInfo(ModelKey key, TrainModelRequest trainRequest) {
+    Put put = new Put(getKey(key))
+      .add(ALGO_COL, trainRequest.getAlgorithm())
+      .add(HYPER_PARAMS_COL, GSON.toJson(trainRequest.getHyperparameters()))
+      .add(STATUS_COL, ModelStatus.TRAINING.name());
+    table.put(put);
   }
 
   /**
@@ -228,6 +258,7 @@ public class ModelTable {
     int idx = keyStr.indexOf(SEPARATOR);
     String modelId = keyStr.substring(idx + 1);
     Map<String, String> hyperParameters = GSON.fromJson(row.getString(HYPER_PARAMS_COL), MAP_TYPE);
+    hyperParameters = hyperParameters == null ? new HashMap<>() : hyperParameters;
     List<String> features = GSON.fromJson(row.getString(FEATURES_COL), LIST_TYPE);
     features = features == null ? new ArrayList<>() : features;
     Set<String> categoricalFeatures = GSON.fromJson(row.getString(CATEGORICAL_FEATURES_COL), SET_TYPE);

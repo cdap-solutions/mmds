@@ -10,14 +10,20 @@ import java.util.Map;
 public class CategoricalHisto extends Histogram<CategoricalHisto> implements Serializable {
   private static final long serialVersionUID = 5788076293831975440L;
   private final Map<String, Long> counts;
+  private long emptyCount;
 
   public CategoricalHisto() {
-    this(0L, 0L, new HashMap<String, Long>());
+    this(0L, 0L, 0L, new HashMap<>());
   }
 
-  public CategoricalHisto(long totalCount, long nullCount, Map<String, Long> counts) {
+  public CategoricalHisto(long totalCount, long nullCount, long emptyCount, Map<String, Long> counts) {
     super(totalCount, nullCount);
     this.counts = new HashMap<>(counts);
+    this.emptyCount = emptyCount;
+  }
+
+  public long getEmptyCount() {
+    return emptyCount;
   }
 
   public Map<String, Long> getCounts() {
@@ -34,6 +40,8 @@ public class CategoricalHisto extends Histogram<CategoricalHisto> implements Ser
     totalCount++;
     if (val == null) {
       nullCount++;
+    } else if (val.isEmpty()) {
+      emptyCount++;
     }
   }
 
@@ -45,6 +53,7 @@ public class CategoricalHisto extends Histogram<CategoricalHisto> implements Ser
       Long existing = counts.get(key);
       counts.put(key, existing == null ? count : count + existing);
     }
-    return new CategoricalHisto(totalCount + other.totalCount, nullCount + other.nullCount, counts);
+    return new CategoricalHisto(totalCount + other.totalCount, nullCount + other.nullCount,
+                                emptyCount + other.emptyCount, counts);
   }
 }

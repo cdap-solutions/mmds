@@ -68,19 +68,6 @@ public class Model {
     return hyperparameters == null ? Collections.<String, String>emptyMap() : hyperparameters;
   }
 
-  /**
-   * Validate that this is a valid model. This is used because this is normally created through deserializing
-   * user input, which may be missing fields.
-   */
-  public void validate() {
-    if (name == null || name.isEmpty()) {
-      throw new IllegalArgumentException("Must specify a name");
-    }
-    if (split == null || split.isEmpty()) {
-      throw new IllegalArgumentException("Must specify a split.");
-    }
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {

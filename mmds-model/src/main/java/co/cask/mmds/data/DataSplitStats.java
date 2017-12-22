@@ -2,8 +2,8 @@ package co.cask.mmds.data;
 
 import co.cask.cdap.api.data.schema.Schema;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,25 +18,28 @@ public class DataSplitStats extends DataSplit {
   private final String id;
   private final String trainingPath;
   private final String testPath;
-  private final Map<String, ColumnStats> trainingStats;
-  private final Map<String, ColumnStats> testStats;
+  private final SplitStatus status;
+  private final List<ColumnSplitStats> stats;
   private final Set<String> models;
 
   public DataSplitStats(String id, String description, String type, Map<String, String> params, List<String> directives,
-                        Schema schema, String trainingPath, String testPath,
-                        Map<String, ColumnStats> trainingStats, Map<String, ColumnStats> testStats,
-                        Set<String> models) {
+                        Schema schema, String trainingPath, String testPath, SplitStatus status,
+                        List<ColumnSplitStats> stats, Set<String> models) {
     super(description, type, params, directives, schema);
     this.id = id;
     this.trainingPath = trainingPath;
     this.testPath = testPath;
-    this.trainingStats = Collections.unmodifiableMap(trainingStats);
-    this.testStats = Collections.unmodifiableMap(testStats);
+    this.status = status;
+    this.stats = stats;
     this.models = Collections.unmodifiableSet(models);
   }
 
   public String getId() {
     return id;
+  }
+
+  public SplitStatus getStatus() {
+    return status;
   }
 
   @Nullable
@@ -49,12 +52,8 @@ public class DataSplitStats extends DataSplit {
     return testPath;
   }
 
-  public Map<String, ColumnStats> getTrainingStats() {
-    return trainingStats;
-  }
-
-  public Map<String, ColumnStats> getTestStats() {
-    return testStats;
+  public List<ColumnSplitStats> getStats() {
+    return stats;
   }
 
   public Set<String> getModels() {
@@ -78,14 +77,14 @@ public class DataSplitStats extends DataSplit {
     return Objects.equals(id, that.id) &&
       Objects.equals(trainingPath, that.trainingPath) &&
       Objects.equals(testPath, that.testPath) &&
-      Objects.equals(trainingStats, that.trainingStats) &&
-      Objects.equals(testStats, that.testStats) &&
+      Objects.equals(status, that.status) &&
+      Objects.equals(stats, that.stats) &&
       Objects.equals(models, that.models);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, trainingPath, testPath, trainingStats, testStats, models);
+    return Objects.hash(id, trainingPath, testPath, status, stats, models);
   }
 
   /**
@@ -102,15 +101,14 @@ public class DataSplitStats extends DataSplit {
     private final String id;
     private String trainingPath;
     private String testPath;
-    private Map<String, ColumnStats> trainingStats;
-    private Map<String, ColumnStats> testStats;
+    private SplitStatus status;
+    private List<ColumnSplitStats> stats;
     private Set<String> models;
 
     public Builder(String id) {
       this.id = id;
       models = new HashSet<>();
-      trainingStats = new HashMap<>();
-      testStats = new HashMap<>();
+      stats = new ArrayList<>();
     }
 
     public Builder setTrainingPath(String trainingPath) {
@@ -123,15 +121,9 @@ public class DataSplitStats extends DataSplit {
       return this;
     }
 
-    public Builder setTrainingStats(Map<String, ColumnStats> trainingStats) {
-      this.trainingStats.clear();
-      this.trainingStats.putAll(trainingStats);
-      return this;
-    }
-
-    public Builder setTestStats(Map<String, ColumnStats> testStats) {
-      this.testStats.clear();
-      this.testStats.putAll(testStats);
+    public Builder setStats(List<ColumnSplitStats> stats) {
+      this.stats.clear();
+      this.stats.addAll(stats);
       return this;
     }
 
@@ -141,11 +133,16 @@ public class DataSplitStats extends DataSplit {
       return this;
     }
 
+    public Builder setStatus(SplitStatus status) {
+      this.status = status;
+      return this;
+    }
+
     public DataSplitStats build() {
-      DataSplitStats stats = new DataSplitStats(id, description, type, params, directives, schema,
-                                                trainingPath, testPath, trainingStats, testStats, models);
-      stats.validate();
-      return stats;
+      DataSplitStats splitStats = new DataSplitStats(id, description, type, params, directives, schema,
+                                                     trainingPath, testPath, status, stats, models);
+      splitStats.validate();
+      return splitStats;
     }
   }
 
@@ -155,8 +152,8 @@ public class DataSplitStats extends DataSplit {
       "id='" + id + '\'' +
       ", trainingPath='" + trainingPath + '\'' +
       ", testPath='" + testPath + '\'' +
-      ", trainingStats=" + trainingStats +
-      ", testStats=" + testStats +
+      ", status='" + status + '\'' +
+      ", stats=" + stats +
       ", models=" + models +
       "} " + super.toString();
   }

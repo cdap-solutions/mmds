@@ -1,5 +1,6 @@
 # Compiled class file
 *.class
+target/
 
 # Log file
 *.log
@@ -30,3 +31,4 @@ out/
 .DS_Store
 ./lib/
 .idea
+target/

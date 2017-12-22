@@ -110,6 +110,18 @@ public class ModelMeta extends Model {
     return new Builder(id);
   }
 
+  public static Builder builder(ModelMeta meta) {
+    return new Builder(meta.id)
+      .setCreateTime(meta.createtime)
+      .setTrainedTime(meta.trainedtime)
+      .setDeployTime(meta.deploytime)
+      .setOutcome(meta.outcome)
+      .setStatus(meta.status)
+      .setFeatures(meta.features)
+      .setCategoricalFeatures(meta.categoricalFeatures)
+      .setEvaluationMetrics(meta.evaluationMetrics);
+  }
+
   /**
    * Builds Model Metadata
    */
@@ -176,11 +188,9 @@ public class ModelMeta extends Model {
     }
 
     public ModelMeta build() {
-      ModelMeta modelMeta = new ModelMeta(id, name, description, algorithm, split, predictionsDataset, status,
-                                          hyperparameters, features, outcome, categoricalFeatures, createtime,
-                                          trainedtime, deploytime, evaluationMetrics);
-      modelMeta.validate();
-      return modelMeta;
+      return new ModelMeta(id, name, description, algorithm, split, predictionsDataset, status,
+                           hyperparameters, features, outcome, categoricalFeatures, createtime,
+                           trainedtime, deploytime, evaluationMetrics);
     }
   }
 }

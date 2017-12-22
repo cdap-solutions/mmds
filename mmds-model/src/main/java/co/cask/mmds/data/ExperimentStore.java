@@ -1,11 +1,16 @@
 package co.cask.mmds.data;
 
 import co.cask.cdap.api.data.schema.Schema;
+import co.cask.mmds.api.Modeler;
+import co.cask.mmds.modeler.Modelers;
+import co.cask.mmds.modeler.param.ModelerParams;
 import co.cask.mmds.proto.BadRequestException;
 import co.cask.mmds.proto.ConflictException;
+import co.cask.mmds.proto.CreateModelRequest;
 import co.cask.mmds.proto.ExperimentNotFoundException;
 import co.cask.mmds.proto.ModelNotFoundException;
 import co.cask.mmds.proto.SplitNotFoundException;
+import co.cask.mmds.proto.TrainModelRequest;
 import co.cask.mmds.stats.CategoricalHisto;
 import co.cask.mmds.stats.NumericHisto;
 import co.cask.mmds.stats.NumericStats;
@@ -53,13 +58,13 @@ public class ExperimentStore {
   public ExperimentStats getExperimentStats(String experimentName) {
     Experiment experiment = getExperiment(experimentName);
 
-    Map<String, ColumnStats> stats = new HashMap<>();
+    Map<String, ColumnStats> metricStats = new HashMap<>();
     CategoricalHisto algoHisto = new CategoricalHisto();
     CategoricalHisto statusHisto = new CategoricalHisto();
 
     List<ModelMeta> models = listModels(experimentName);
     if (models.isEmpty()) {
-      return new ExperimentStats(experiment, stats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
+      return new ExperimentStats(experiment, metricStats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
     }
 
     Iterator<ModelMeta> modelIter = models.iterator();
@@ -149,28 +154,28 @@ public class ExperimentStore {
     }
 
     if (rmseHisto != null) {
-      stats.put("rmse", new ColumnStats(rmseHisto));
+      metricStats.put("rmse", new ColumnStats(rmseHisto));
     }
     if (r2Histo != null) {
-      stats.put("r2", new ColumnStats(r2Histo));
+      metricStats.put("r2", new ColumnStats(r2Histo));
     }
     if (maeHisto != null) {
-      stats.put("mae", new ColumnStats(maeHisto));
+      metricStats.put("mae", new ColumnStats(maeHisto));
     }
     if (evarianceHisto != null) {
-      stats.put("evariance", new ColumnStats(evarianceHisto));
+      metricStats.put("evariance", new ColumnStats(evarianceHisto));
     }
     if (precisionHisto != null) {
-      stats.put("precision", new ColumnStats(precisionHisto));
+      metricStats.put("precision", new ColumnStats(precisionHisto));
     }
     if (recallHisto != null) {
-      stats.put("recall", new ColumnStats(recallHisto));
+      metricStats.put("recall", new ColumnStats(recallHisto));
     }
     if (f1Histo != null) {
-      stats.put("f1", new ColumnStats(f1Histo));
+      metricStats.put("f1", new ColumnStats(f1Histo));
     }
 
-    return new ExperimentStats(experiment, stats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
+    return new ExperimentStats(experiment, metricStats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
   }
 
   public void putExperiment(Experiment experiment) {
@@ -198,20 +203,64 @@ public class ExperimentStore {
     return modelMeta;
   }
 
-  public ModelTrainerInfo addModel(String experimentName, Model modelInfo) {
+  public ModelTrainerInfo trainModel(ModelKey key, TrainModelRequest trainRequest) {
+    Experiment experiment = getExperiment(key.getExperiment());
+    ModelMeta meta = getModel(key);
+    ModelStatus currentStatus = meta.getStatus();
+
+    if (currentStatus != ModelStatus.DATA_READY) {
+      throw new ConflictException(String.format("Cannot train a model that is in the '%s' state. " +
+                                                  "The split must finish successfully before a model can be trained.",
+                                                currentStatus));
+    }
+
+    Modeler modeler = Modelers.getModeler(trainRequest.getAlgorithm());
+    ModelerParams params = modeler.getParams(trainRequest.getHyperparameters());
+    // update params with the modeler defaults.
+    TrainModelRequest requestWithDefaults = new TrainModelRequest(trainRequest.getAlgorithm(),
+                                                                  trainRequest.getPredictionsDataset(),
+                                                                  params.toMap());
+
+    models.setTrainingInfo(key, requestWithDefaults);
+
+    SplitKey splitKey = new SplitKey(key.getExperiment(), meta.getSplit());
+    DataSplitStats splitInfo = getSplit(splitKey);
+
+    meta = ModelMeta.builder(meta)
+      .setStatus(ModelStatus.TRAINING)
+      .setAlgorithm(trainRequest.getAlgorithm())
+      .setHyperParameters(trainRequest.getHyperparameters())
+      .build();
+
+    return new ModelTrainerInfo(experiment, splitInfo, key.getModel(), meta);
+  }
+
+  public void setModelSplit(ModelKey key, String splitId) {
+    getExperiment(key.getExperiment());
+    ModelMeta meta = getModel(key);
+    ModelStatus currentStatus = meta.getStatus();
+
+    if (currentStatus != ModelStatus.EMPTY && currentStatus != ModelStatus.SPLIT_FAILED &&
+      currentStatus != ModelStatus.TRAINING_FAILED) {
+      throw new ConflictException(String.format(
+        "Cannot set a split for a model in the '%s' state. The model must be in the '%s', '%s', or '%s' state.",
+        currentStatus, ModelStatus.EMPTY, ModelStatus.SPLIT_FAILED, ModelStatus.TRAINING_FAILED));
+    }
+
+    DataSplitStats splitInfo = getSplit(new SplitKey(key.getExperiment(), splitId));
+
+    String currentSplit = meta.getSplit();
+    if (currentSplit != null) {
+      splits.unregisterModel(new SplitKey(key.getExperiment(), currentSplit), key.getModel());
+    }
+
+    models.setSplit(key, splitInfo);
+    splits.registerModel(new SplitKey(key.getExperiment(), splitId), key.getModel());
+  }
+
+  public String addModel(String experimentName, CreateModelRequest createRequest) {
     Experiment experiment = getExperiment(experimentName);
-    SplitKey splitKey = new SplitKey(experimentName, modelInfo.getSplit());
-    DataSplitStats splitInfo = splits.get(splitKey);
-    if (splitInfo == null) {
-      throw new SplitNotFoundException(splitKey);
-    }
-    if (splitInfo.getTrainingPath() == null) {
-      throw new ConflictException("Data split is not ready. " +
-                                    "Please try again after the split has finished successfully.");
-    }
-    String modelId = models.add(experimentName, experiment.getOutcome(), modelInfo, System.currentTimeMillis());
-    splits.registerModel(splitKey, modelId);
-    return new ModelTrainerInfo(experiment, splitInfo, modelId, modelInfo);
+    return models.add(experiment, createRequest, System.currentTimeMillis());
   }
 
   public void updateModelMetrics(ModelKey key, EvaluationMetrics evaluationMetrics,
@@ -237,27 +286,15 @@ public class ExperimentStore {
     models.setStatus(key, ModelStatus.DEPLOYED);
   }
 
-  public void setModelStatus(ModelKey key, ModelStatus status) {
+  public void modelFailed(ModelKey key) {
     ModelMeta modelMeta = getModel(key);
     ModelStatus currentStatus = modelMeta.getStatus();
-    switch (status) {
-      case TRAINING:
-        if (currentStatus != ModelStatus.WAITING) {
-          throw new ConflictException("Cannot transition model state from " + currentStatus + " to " + status);
-        }
-        break;
-      case TRAINED:
-        if (currentStatus != ModelStatus.TRAINING) {
-          throw new ConflictException("Cannot transition model state from " + currentStatus + " to " + status);
-        }
-        break;
-      case DEPLOYED:
-        if (currentStatus != ModelStatus.TRAINED) {
-          throw new ConflictException("Cannot transition model state from " + currentStatus + " to " + status);
-        }
-        break;
+    if (currentStatus != ModelStatus.TRAINING) {
+      // should never happen
+      throw new IllegalStateException(String.format("Cannot transition model to '%s' from '%s'",
+                                                    currentStatus, ModelStatus.TRAINING_FAILED));
     }
-    models.setStatus(key, status);
+    models.setStatus(key, ModelStatus.TRAINING_FAILED);
   }
 
   public List<DataSplitStats> listSplits(String experimentName) {
@@ -309,9 +346,12 @@ public class ExperimentStore {
     return stats;
   }
 
-  public void updateSplitStats(SplitKey splitKey, String trainingPath, String testPath,
-                               Map<String, ColumnStats> trainingStats, Map<String, ColumnStats> testStats) {
-    splits.updateStats(splitKey, trainingPath, testPath, trainingStats, testStats);
+  public void finishSplit(SplitKey splitKey, String trainingPath, String testPath, List<ColumnSplitStats> stats) {
+    splits.updateStats(splitKey, trainingPath, testPath, stats);
+    DataSplitStats splitStats = getSplit(splitKey);
+    for (String modelId : splitStats.getModels()) {
+      models.setStatus(new ModelKey(splitKey.getExperiment(), modelId), ModelStatus.DATA_READY);
+    }
   }
 
   public void deleteSplit(SplitKey key) {
