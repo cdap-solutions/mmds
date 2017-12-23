@@ -38,7 +38,8 @@ public class ExperimentMetaTable {
   public static final DatasetProperties DATASET_PROPERTIES = DatasetProperties.builder()
     .add(IndexedTable.INDEX_COLUMNS_CONF_KEY, SRCPATH_COL)
     .add(Table.PROPERTY_SCHEMA, SCHEMA.toString())
-    .add(Table.PROPERTY_SCHEMA_ROW_FIELD, NAME_COL).build();
+    .add(Table.PROPERTY_SCHEMA_ROW_FIELD, NAME_COL)
+    .build();
 
   private final Table table;
 

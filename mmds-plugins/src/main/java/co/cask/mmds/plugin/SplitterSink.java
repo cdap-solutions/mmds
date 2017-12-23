@@ -19,6 +19,8 @@ import co.cask.mmds.data.DataSplitStats;
 import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.ExperimentMetaTable;
 import co.cask.mmds.data.ExperimentStore;
+import co.cask.mmds.data.ModelKey;
+import co.cask.mmds.data.ModelStatus;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.stats.CategoricalHisto;
@@ -65,6 +67,22 @@ public class SplitterSink extends SparkSink<StructuredRecord> {
   }
 
   @Override
+  public void onRunFinish(boolean succeeded, SparkPluginContext context) {
+    if (succeeded) {
+
+      Table modelMeta = context.getDataset(Constants.Dataset.MODEL_META);
+      ModelTable modelTable = new ModelTable(modelMeta);
+
+      PartitionedFileSet splits = context.getDataset(Constants.Dataset.SPLITS);
+      DataSplitTable dataSplitTable = new DataSplitTable(splits);
+
+      for (String modelId : dataSplitTable.get(new SplitKey(conf.getExperimentId(), conf.getSplitId())).getModels()) {
+        modelTable.setStatus(new ModelKey(conf.getExperimentId(), modelId), ModelStatus.DATA_READY);
+      }
+    }
+  }
+
+  @Override
   public void run(SparkExecutionPluginContext context, JavaRDD<StructuredRecord> javaRDD) throws Exception {
     Schema inputSchema = conf.getSchema(context.getInputSchema());
     if (inputSchema == null) {
@@ -72,7 +90,6 @@ public class SplitterSink extends SparkSink<StructuredRecord> {
       throw new IllegalStateException("Null (unknown) input schema for model trainer.");
     }
     SQLContext sqlContext = new SQLContext(context.getSparkContext().sc());
-
 
     Table modelMeta = context.getDataset(Constants.Dataset.MODEL_META);
     Table experiments = context.getDataset(Constants.Dataset.EXPERIMENTS_META);

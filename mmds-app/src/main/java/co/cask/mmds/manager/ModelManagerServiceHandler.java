@@ -389,11 +389,10 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                              @PathParam("experiment-name") String experimentName,
                              @PathParam("split-id") String splitId) {
     final SplitKey key = new SplitKey(experimentName, splitId);
-    // todo: implement this properly
-    responder.sendString(callInTx(responder, store -> {
+    runInTx(responder, store -> {
       DataSplitStats stats = store.getSplit(key);
-      return stats.getTrainingPath() == null ? "RUNNING" : "COMPLETE";
-    }));
+      responder.sendString(GSON.toJson(stats.getStatus()));
+    });
   }
 
   @DELETE

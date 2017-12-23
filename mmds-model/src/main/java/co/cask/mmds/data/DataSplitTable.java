@@ -212,6 +212,11 @@ public class DataSplitTable {
       throw new IllegalStateException("Unable to parse split schema. This is likely due to data corruption. " +
                                         "You will likely have to delete the split.");
     }
+    Set<String> models = new HashSet<>();
+    String modelsStr = meta.get(MODELS);
+    if (modelsStr != null) {
+      models = GSON.fromJson(modelsStr, SET_TYPE);
+    }
 
     DataSplitStats.Builder builder = DataSplitStats.builder(id)
       .setDescription(meta.get(DESCRIPTION))
@@ -221,6 +226,7 @@ public class DataSplitTable {
       .setSchema(schema)
       .setTrainingPath(meta.get(TRAIN_PATH))
       .setTestPath(meta.get(TEST_PATH))
+      .setModels(models)
       .setStatus(SplitStatus.valueOf(meta.get(STATUS)));
 
     if (!excludeStats) {
