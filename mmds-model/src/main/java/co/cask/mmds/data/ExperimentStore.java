@@ -241,10 +241,11 @@ public class ExperimentStore {
     ModelStatus currentStatus = meta.getStatus();
 
     if (currentStatus != ModelStatus.EMPTY && currentStatus != ModelStatus.SPLIT_FAILED &&
-      currentStatus != ModelStatus.TRAINING_FAILED) {
+      currentStatus != ModelStatus.TRAINING_FAILED && currentStatus != ModelStatus.DATA_READY) {
       throw new ConflictException(String.format(
-        "Cannot set a split for a model in the '%s' state. The model must be in the '%s', '%s', or '%s' state.",
-        currentStatus, ModelStatus.EMPTY, ModelStatus.SPLIT_FAILED, ModelStatus.TRAINING_FAILED));
+        "Cannot set a split for a model in the '%s' state. The model must be in the '%s', '%s', '%s', or '%s' state.",
+        currentStatus, ModelStatus.EMPTY, ModelStatus.SPLIT_FAILED,
+        ModelStatus.TRAINING_FAILED, ModelStatus.DATA_READY));
     }
 
     DataSplitStats splitInfo = getSplit(new SplitKey(key.getExperiment(), splitId));
