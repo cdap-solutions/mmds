@@ -1,5 +1,7 @@
 package co.cask.mmds.stats;
 
+import co.cask.mmds.NullableMath;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,9 +18,9 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
   private Double max;
   private Double mean;
   private Double m2;
-  private Long zeroCount;
-  private Long negativeCount;
-  private Long positiveCount;
+  private long zeroCount;
+  private long negativeCount;
+  private long positiveCount;
 
   public NumericHisto(double min, double max, int maxBins, Double val) {
     super(0L, 0L);
@@ -107,19 +109,23 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
     return mean;
   }
 
+  public Double getM2() {
+    return m2;
+  }
+
   public Double getStddev() {
     return m2 == null ? null : Math.sqrt(m2 / (totalCount - nullCount));
   }
 
-  public Long getZeroCount() {
+  public long getZeroCount() {
     return zeroCount;
   }
 
-  public Long getNegativeCount() {
+  public long getNegativeCount() {
     return negativeCount;
   }
 
-  public Long getPositiveCount() {
+  public long getPositiveCount() {
     return positiveCount;
   }
 
@@ -130,16 +136,8 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
       return;
     }
 
-    if (min == null) {
-      min = val;
-    } else {
-      min = Math.min(min, val);
-    }
-    if (max == null) {
-      max = val;
-    } else {
-      max = Math.max(max, val);
-    }
+    min = NullableMath.min(min, val);
+    max = NullableMath.max(max, val);
 
     if (val == 0d) {
       zeroCount++;
@@ -177,22 +175,8 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
       merged.add(h1Iter.next().merge(h2Iter.next()));
     }
 
-    Double newMin;
-    Double newMax;
-    if (min != null && other.min != null) {
-      newMin = Math.min(min, other.min);
-    } else if (min == null) {
-      newMin = other.min;
-    } else {
-      newMin = min;
-    }
-    if (max != null && other.max != null) {
-      newMax = Math.max(max, other.max);
-    } else if (max == null) {
-      newMax = other.max;
-    } else {
-      newMax = max;
-    }
+    Double newMin = NullableMath.min(min, other.min);
+    Double newMax = NullableMath.max(max, other.max);
 
     long newTotalCount = totalCount + other.totalCount;
     long newNullCount = nullCount + other.nullCount;
@@ -202,29 +186,8 @@ public class NumericHisto extends Histogram<NumericHisto> implements Serializabl
 
     long nonNullCount = totalCount - nullCount;
     long otherNonNullCount = other.totalCount - other.nullCount;
-    long totalNonNullCount = nonNullCount + otherNonNullCount;
-    Double newMean;
-    if (mean == null && other.mean == null) {
-      newMean = null;
-    } else if (mean == null) {
-      newMean = other.mean;
-    } else if (other.mean == null) {
-      newMean = mean;
-    } else {
-      newMean = mean * nonNullCount + other.mean * otherNonNullCount;
-      newMean /= totalNonNullCount;
-    }
-
-    Double newM2;
-    if (m2 == null && other.m2 == null) {
-      newM2 = null;
-    } else if (m2 == null) {
-      newM2 = other.m2;
-    } else if (other.m2 == null) {
-      newM2 = m2;
-    } else {
-      newM2 = m2 + other.m2 + nonNullCount * square(mean - newMean) + otherNonNullCount * square(other.mean - newMean);
-    }
+    Double newMean = NullableMath.mean(mean, nonNullCount, other.mean, otherNonNullCount);
+    Double newM2 = NullableMath.m2(m2, mean, nonNullCount, other.m2, other.mean, otherNonNullCount);
 
     return new NumericHisto(newTotalCount, newNullCount, merged, newMin, newMax, newMean, newM2,
                             newZeroCount, newNegativeCount, newPositiveCount);

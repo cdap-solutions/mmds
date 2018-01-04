@@ -1,5 +1,6 @@
 package co.cask.mmds.data;
 
+import co.cask.mmds.NullableMath;
 import co.cask.mmds.stats.CategoricalHisto;
 import co.cask.mmds.stats.NumericBin;
 import co.cask.mmds.stats.NumericHisto;
@@ -22,7 +23,7 @@ public class ColumnSplitStats {
   private final SplitVal<Long> numNull;
   // categorical
   private final SplitVal<Long> numEmpty;
-  private final SplitVal<Integer> unique;
+  private final SplitVal<Long> unique;
   // numeric
   private final SplitVal<Long> numZero;
   private final SplitVal<Long> numPositive;
@@ -39,7 +40,7 @@ public class ColumnSplitStats {
   }
 
   public ColumnSplitStats(String field, SplitVal<Long> numTotal, SplitVal<Long> numNull, SplitVal<Long> numEmpty,
-                          SplitVal<Integer> unique, SplitVal<Long> numZero, SplitVal<Long> numPositive,
+                          SplitVal<Long> unique, SplitVal<Long> numZero, SplitVal<Long> numPositive,
                           SplitVal<Long> numNegative, SplitVal<Double> min, SplitVal<Double> max, SplitVal<Double> mean,
                           SplitVal<Double> stddev, List<SplitHistogramBin> histo, Double similarity) {
     this.field = field;
@@ -60,26 +61,30 @@ public class ColumnSplitStats {
 
   public ColumnSplitStats(String field, NumericHisto train, NumericHisto test) {
     this(field,
-         new SplitVal<>(train.getTotalCount(), test.getTotalCount()),
-         new SplitVal<>(train.getNullCount(), test.getNullCount()),
+         new SplitCountVal(train.getTotalCount(), test.getTotalCount()),
+         new SplitCountVal(train.getNullCount(), test.getNullCount()),
          null, null,
-         new SplitVal<>(train.getZeroCount(), test.getZeroCount()),
-         new SplitVal<>(train.getPositiveCount(), test.getPositiveCount()),
-         new SplitVal<>(train.getNegativeCount(), test.getNegativeCount()),
-         new SplitVal<>(train.getMin(), test.getMin()),
-         new SplitVal<>(train.getMax(), test.getMax()),
-         new SplitVal<>(train.getMean(), test.getMean()),
-         new SplitVal<>(train.getStddev(), test.getStddev()),
+         new SplitCountVal(train.getZeroCount(), test.getZeroCount()),
+         new SplitCountVal(train.getPositiveCount(), test.getPositiveCount()),
+         new SplitCountVal(train.getNegativeCount(), test.getNegativeCount()),
+         new SplitVal<>(train.getMin(), test.getMin(), NullableMath.min(train.getMin(), test.getMin())),
+         new SplitVal<>(train.getMax(), test.getMax(), NullableMath.max(train.getMax(), test.getMax())),
+         new SplitVal<>(train.getMean(), test.getMean(),
+                        NullableMath.mean(train.getMean(), train.getNonNullCount(),
+                                          test.getMean(), test.getNonNullCount())),
+         new SplitVal<>(train.getStddev(), test.getStddev(),
+                        NullableMath.stddev(train.getM2(), train.getMean(), train.getNonNullCount(),
+                                            test.getM2(), test.getMean(), test.getNonNullCount())),
          convert(train, test),
          null);
   }
 
   public ColumnSplitStats(String field, CategoricalHisto train, CategoricalHisto test) {
     this(field,
-         new SplitVal<>(train.getTotalCount(), test.getTotalCount()),
-         new SplitVal<>(train.getNullCount(), test.getNullCount()),
-         new SplitVal<>(train.getEmptyCount(), test.getEmptyCount()),
-         new SplitVal<>(train.getCounts().size(), test.getCounts().size()),
+         new SplitCountVal(train.getTotalCount(), test.getTotalCount()),
+         new SplitCountVal(train.getNullCount(), test.getNullCount()),
+         new SplitCountVal(train.getEmptyCount(), test.getEmptyCount()),
+         new SplitCountVal((long) train.getCounts().size(), (long) test.getCounts().size()),
          null, null, null, null, null, null, null,
          convert(train, test),
          null);
@@ -105,7 +110,7 @@ public class ColumnSplitStats {
     return numEmpty;
   }
 
-  public SplitVal<Integer> getUnique() {
+  public SplitVal<Long> getUnique() {
     return unique;
   }
 
@@ -163,7 +168,7 @@ public class ColumnSplitStats {
       }
 
       String binStr = format(bin1);
-      bins.add(new SplitHistogramBin(binStr, new SplitVal<>(bin1.getCount(), bin2.getCount())));
+      bins.add(new SplitHistogramBin(binStr, new SplitCountVal(bin1.getCount(), bin2.getCount())));
     }
 
     return bins;
@@ -176,7 +181,7 @@ public class ColumnSplitStats {
       String category = trainEntry.getKey();
       Long trainCount = trainEntry.getValue();
       Long testCount = test.getCounts().get(category);
-      bins.add(new SplitHistogramBin(category, new SplitVal<>(trainCount, testCount == null ? 0 : testCount)));
+      bins.add(new SplitHistogramBin(category, new SplitCountVal(trainCount, testCount == null ? 0 : testCount)));
     }
     for (Map.Entry<String, Long> testEntry : test.getCounts().entrySet()) {
       String category = testEntry.getKey();
@@ -184,7 +189,7 @@ public class ColumnSplitStats {
       if (train.getCounts().containsKey(category)) {
         continue;
       }
-      bins.add(new SplitHistogramBin(category, new SplitVal<>(0L, testCount)));
+      bins.add(new SplitHistogramBin(category, new SplitCountVal(0L, testCount)));
     }
 
     // sort in descending order

@@ -14,6 +14,7 @@ import co.cask.cdap.etl.api.batch.SparkExecutionPluginContext;
 import co.cask.cdap.etl.api.batch.SparkPluginContext;
 import co.cask.cdap.etl.api.batch.SparkSink;
 import co.cask.mmds.Constants;
+import co.cask.mmds.NullableMath;
 import co.cask.mmds.data.ColumnSplitStats;
 import co.cask.mmds.data.DataSplitStats;
 import co.cask.mmds.data.DataSplitTable;
@@ -228,31 +229,8 @@ public class SplitterSink extends SparkSink<StructuredRecord> {
       NumericStats trainStats = entry.getValue();
       NumericStats testStats = testNumericStats.get(column);
 
-      Double trainMin = trainStats.getMin();
-      Double testMin = testStats.getMin();
-      Double min;
-      if (trainMin == null && testMin == null) {
-        min = null;
-      } else if (trainMin == null) {
-        min = testMin;
-      } else if (testMin == null) {
-        min = trainMin;
-      } else {
-        min = Math.min(trainMin, testMin);
-      }
-
-      Double trainMax = trainStats.getMax();
-      Double testMax = testStats.getMax();
-      Double max;
-      if (trainMax == null && testMax == null) {
-        max = null;
-      } else if (trainMax == null) {
-        max = testMax;
-      } else if (testMax == null) {
-        max = trainMax;
-      } else {
-        max = Math.max(trainMax, testMax);
-      }
+      Double min = NullableMath.min(trainStats.getMin(), testStats.getMin());
+      Double max = NullableMath.max(trainStats.getMax(), testStats.getMax());
 
       columnMinMax.put(column, new Tuple2<>(min, max));
     }
