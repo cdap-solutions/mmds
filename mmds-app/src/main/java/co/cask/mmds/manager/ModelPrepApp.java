@@ -26,6 +26,7 @@ import co.cask.cdap.api.dataset.table.Table;
 import co.cask.mmds.Constants;
 import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.ExperimentMetaTable;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Manage all the experiments and models.
@@ -61,20 +62,34 @@ public class ModelPrepApp extends AbstractApplication<ModelPrepApp.Conf> {
     private String experimentMetaDataset;
     private String splitsDataset;
 
+    public Conf() {
+      this(Constants.Dataset.MODEL_META, Constants.Dataset.MODEL_COMPONENTS,
+           Constants.Dataset.EXPERIMENTS_META, Constants.Dataset.SPLITS);
+    }
+
+    @VisibleForTesting
+    public Conf(String modelMetaDataset, String modelComponentsDataset,
+                String experimentMetaDataset, String splitsDataset) {
+      this.modelMetaDataset = modelMetaDataset;
+      this.modelComponentsDataset = modelComponentsDataset;
+      this.experimentMetaDataset = experimentMetaDataset;
+      this.splitsDataset = splitsDataset;
+    }
+
     public String getModelMetaDataset() {
-      return modelMetaDataset == null ? Constants.Dataset.MODEL_META : modelMetaDataset;
+      return modelMetaDataset;
     }
 
     public String getModelComponentDataset() {
-      return modelComponentsDataset == null ? Constants.Dataset.MODEL_COMPONENTS : modelComponentsDataset;
+      return modelComponentsDataset;
     }
 
     public String getExperimentMetaDataset() {
-      return experimentMetaDataset == null ? Constants.Dataset.EXPERIMENTS_META : experimentMetaDataset;
+      return experimentMetaDataset;
     }
 
     public String getSplitsDataset() {
-      return splitsDataset == null ? Constants.Dataset.SPLITS : splitsDataset;
+      return splitsDataset;
     }
   }
 }

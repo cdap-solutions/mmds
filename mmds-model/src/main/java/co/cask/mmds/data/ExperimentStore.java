@@ -16,6 +16,7 @@ import co.cask.mmds.stats.NumericHisto;
 import co.cask.mmds.stats.NumericStats;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import org.apache.twill.filesystem.Location;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -336,7 +337,8 @@ public class ExperimentStore {
     }
 
     String splitId = splits.addSplit(experimentName, splitInfo);
-    return new DataSplitInfo(splitId, experiment, splitInfo);
+    Location splitLocation = splits.getLocation(new SplitKey(experimentName, splitId));
+    return new DataSplitInfo(splitId, experiment, splitInfo, splitLocation);
   }
 
   public DataSplitStats getSplit(SplitKey key) {
@@ -355,6 +357,16 @@ public class ExperimentStore {
     for (String modelId : splitStats.getModels()) {
       models.setStatus(new ModelKey(splitKey.getExperiment(), modelId), ModelStatus.DATA_READY);
     }
+  }
+
+  public void splitFailed(SplitKey key) {
+    getExperiment(key.getExperiment());
+    DataSplitStats splitStats = getSplit(key);
+    if (splitStats.getStatus() != SplitStatus.SPLITTING) {
+      // should never happen
+      throw new IllegalStateException("Cannot transition split to failed state unless it is in the splitting state.");
+    }
+    splits.setStatus(key, SplitStatus.FAILED);
   }
 
   public void deleteSplit(SplitKey key) {

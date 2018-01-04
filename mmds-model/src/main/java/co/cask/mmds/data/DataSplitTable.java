@@ -104,6 +104,13 @@ public class DataSplitTable {
     return partitionDetail.getLocation();
   }
 
+  public void setStatus(SplitKey splitKey, SplitStatus status) {
+    PartitionKey key = getKey(splitKey);
+    Map<String, String> updates = new HashMap<>();
+    updates.put(STATUS, status.name());
+    splits.setMetadata(key, updates);
+  }
+
   /**
    * Delete the specified split
    *
