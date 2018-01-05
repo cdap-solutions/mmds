@@ -33,7 +33,7 @@ public class ColumnSplitStats {
   private final SplitVal<Double> mean;
   private final SplitVal<Double> stddev;
   private final List<SplitHistogramBin> histo;
-  private final Double similarity;
+  private final double divergence;
 
   static {
     NOTATION_FORMAT.setRoundingMode(RoundingMode.HALF_UP);
@@ -42,7 +42,7 @@ public class ColumnSplitStats {
   public ColumnSplitStats(String field, SplitVal<Long> numTotal, SplitVal<Long> numNull, SplitVal<Long> numEmpty,
                           SplitVal<Long> unique, SplitVal<Long> numZero, SplitVal<Long> numPositive,
                           SplitVal<Long> numNegative, SplitVal<Double> min, SplitVal<Double> max, SplitVal<Double> mean,
-                          SplitVal<Double> stddev, List<SplitHistogramBin> histo, Double similarity) {
+                          SplitVal<Double> stddev, List<SplitHistogramBin> histo) {
     this.field = field;
     this.numTotal = numTotal;
     this.numNull = numNull;
@@ -56,7 +56,20 @@ public class ColumnSplitStats {
     this.mean = mean;
     this.stddev = stddev;
     this.histo = histo;
-    this.similarity = similarity;
+
+    // Kullback-Leibler divergence, where each bin is treated as a value in the distribution
+    double div = 0d;
+
+    // add 1 to each bin to avoid divide by 0 issues
+    double trainNonNull = numTotal.getTrain() - numNull.getTrain() + histo.size();
+    double testNonNull = numTotal.getTest() - numNull.getTest() + histo.size();
+    for (SplitHistogramBin bin : histo) {
+      double trainProbability = (1 + bin.getCount().getTrain()) / trainNonNull;
+      double testProbability = (1 + bin.getCount().getTest()) / testNonNull;
+      div += testProbability * Math.log(testProbability / trainProbability);
+    }
+    // in case some floating point issue causes higher than 1 or lower than 0.
+    this.divergence = Math.max(0.d, Math.min(1.0d, div));
   }
 
   public ColumnSplitStats(String field, NumericHisto train, NumericHisto test) {
@@ -75,8 +88,7 @@ public class ColumnSplitStats {
          new SplitVal<>(train.getStddev(), test.getStddev(),
                         NullableMath.stddev(train.getM2(), train.getMean(), train.getNonNullCount(),
                                             test.getM2(), test.getMean(), test.getNonNullCount())),
-         convert(train, test),
-         null);
+         convert(train, test));
   }
 
   public ColumnSplitStats(String field, CategoricalHisto train, CategoricalHisto test) {
@@ -86,8 +98,7 @@ public class ColumnSplitStats {
          new SplitCountVal(train.getEmptyCount(), test.getEmptyCount()),
          new SplitCountVal((long) train.getCounts().size(), (long) test.getCounts().size()),
          null, null, null, null, null, null, null,
-         convert(train, test),
-         null);
+         convert(train, test));
   }
 
   public List<SplitHistogramBin> getHisto() {
@@ -142,8 +153,8 @@ public class ColumnSplitStats {
     return stddev;
   }
 
-  public Double getSimilarity() {
-    return similarity;
+  public double getDivergence() {
+    return divergence;
   }
 
   private static List<SplitHistogramBin> convert(NumericHisto train, NumericHisto test) {
