@@ -19,21 +19,23 @@ import javax.annotation.Nullable;
  * serialization, deserialization, etc. This is not a custom dataset because custom datasets cannot currently
  * be used in plugins.
  */
-public class ExperimentMetaTable {
+public class ExperimentMetaTable extends CountTable {
   private final static String NAME_COL = "name";
   private final static String DESC_COL = "description";
   private final static String SRCPATH_COL = "srcpath";
   private final static String OUTCOME_COL = "outcome";
   private final static String OUTCOME_TYPE_COL = "outcomeType";
   private final static String WORKSPACE_COL = "workspace";
-  private static final Schema SCHEMA = Schema.recordOf(
+
+  private final static Schema SCHEMA = Schema.recordOf(
     "experiments",
     Schema.Field.of(NAME_COL, Schema.of(Schema.Type.STRING)),
     Schema.Field.of(DESC_COL, Schema.of(Schema.Type.STRING)),
     Schema.Field.of(SRCPATH_COL, Schema.of(Schema.Type.STRING)),
     Schema.Field.of(OUTCOME_COL, Schema.of(Schema.Type.STRING)),
     Schema.Field.of(OUTCOME_TYPE_COL, Schema.of(Schema.Type.STRING)),
-    Schema.Field.of(WORKSPACE_COL, Schema.of(Schema.Type.STRING))
+    Schema.Field.of(WORKSPACE_COL, Schema.of(Schema.Type.STRING)),
+    Schema.Field.of(TOTALS_COL, Schema.nullableOf(Schema.of(Schema.Type.LONG)))
   );
   public static final DatasetProperties DATASET_PROPERTIES = DatasetProperties.builder()
     .add(IndexedTable.INDEX_COLUMNS_CONF_KEY, SRCPATH_COL)
@@ -41,28 +43,43 @@ public class ExperimentMetaTable {
     .add(Table.PROPERTY_SCHEMA_ROW_FIELD, NAME_COL)
     .build();
 
-  private final Table table;
-
   public ExperimentMetaTable(Table table) {
-    this.table = table;
+    super(table);
   }
 
   /**
    * List all experiments. Never returns null. If there are no experiments, returns an empty list.
    *
-   * @return all experiments
+   * @param offset the number of initial experiments to ignore and not add to the results
+   * @param limit upper limit on number of results returned.
+   *
+   * @return all experiments starting from offset
    */
-  public List<Experiment> list() {
-    Scan scan = new Scan(null, null);
+  public ExperimentsMeta list(int offset, int limit) {
+    Scan scan = new Scan(new byte[] { 0, 0 }, null);
+    int count = 0;
+    int cursor = 0;
 
     List<Experiment> experiments = new ArrayList<>();
     try (Scanner scanner = table.scan(scan)) {
       Row row;
+
       while ((row = scanner.next()) != null) {
+        if (cursor < offset) {
+          cursor++;
+          continue;
+        }
+
+        if (count >= limit) {
+          break;
+        }
+
         experiments.add(fromRow(row));
+        count++;
       }
     }
-    return experiments;
+
+    return new ExperimentsMeta(getTotalCount(), experiments);
   }
 
   /**
@@ -84,6 +101,7 @@ public class ExperimentMetaTable {
    */
   public void delete(String name) {
     table.delete(Bytes.toBytes(name));
+    decrementRowCount(1);
   }
 
   /**
@@ -100,6 +118,7 @@ public class ExperimentMetaTable {
       .add(OUTCOME_TYPE_COL, experiment.getOutcomeType())
       .add(WORKSPACE_COL, experiment.getWorkspaceId());
     table.put(put);
+    incrementRowCount();
   }
 
   private Experiment fromRow(Row row) {

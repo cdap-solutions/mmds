@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
  * serialization, deserialization, etc. This is not a custom dataset because custom datasets cannot currently
  * be used in plugins.
  */
-public class ModelTable {
+public class ModelTable extends CountTable {
   private static final Gson GSON = new Gson();
   private static Type MAP_TYPE = new TypeToken<Map<String, String>>() { }.getType();
   private static Type LIST_TYPE = new TypeToken<List<String>>() { }.getType();
@@ -56,31 +56,45 @@ public class ModelTable {
   private static final String R2_COL = "r2";
   private static final String EVARIANCE_COL = "evariance";
   private static final String MAE_COL = "mae";
-  
-  private final Table table;
 
   public ModelTable(Table table) {
-    this.table = table;
+    super(table);
   }
 
   /**
    * List all models in the specified experiment. Never returns null. If there are no models, returns an empty list.
    *
    * @param experiment the experiment name
-   * @return all models in the experiment
+   * @param offset the number of initial models to ignore and not add to the results
+   * @param limit upper limit on number of results returned.
+   *
+   * @return all models in the experiment starting from offset
    */
-  public List<ModelMeta> list(String experiment) {
+  public ModelsMeta list(String experiment, int offset, int limit) {
     byte[] startKey = Bytes.toBytes(experiment + SEPARATOR);
     Scan scan = new Scan(startKey, Bytes.stopKeyForPrefix(startKey));
+    int count = 0;
+    int cursor = 0;
 
     List<ModelMeta> models = new ArrayList<>();
     try (Scanner scanner = table.scan(scan)) {
       Row row;
       while ((row = scanner.next()) != null) {
+        if (cursor < offset) {
+          cursor++;
+          continue;
+        }
+
+        if (count >= limit) {
+          break;
+        }
+
         models.add(fromRow(row));
+        count++;
       }
     }
-    return models;
+
+    return new ModelsMeta(getTotalCount(), models);
   }
 
   /**
@@ -118,6 +132,7 @@ public class ModelTable {
    */
   public void delete(ModelKey key) {
     table.delete(getKey(key));
+    decrementRowCount(1);
   }
 
   /**
@@ -127,7 +142,9 @@ public class ModelTable {
    * @return the number of models deleted
    */
   public int delete(String experiment) {
-    return delete(experiment, Integer.MAX_VALUE);
+    int deleted = delete(experiment, Integer.MAX_VALUE);
+    decrementRowCount(deleted);
+    return deleted;
   }
 
   /**
@@ -183,6 +200,7 @@ public class ModelTable {
       .add(TRAIN_TIME_COL, -1L)
       .add(DEPLOY_TIME_COL, -1L);
     table.put(put);
+    incrementRowCount();
     return id;
   }
 

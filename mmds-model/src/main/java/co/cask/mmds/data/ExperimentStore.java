@@ -43,8 +43,8 @@ public class ExperimentStore {
     this.models = models;
   }
 
-  public List<Experiment> listExperiments() {
-    return experiments.list();
+  public ExperimentsMeta listExperiments(int offset, int limit) {
+    return experiments.list(offset, limit);
   }
 
   public Experiment getExperiment(String experimentName) {
@@ -62,7 +62,7 @@ public class ExperimentStore {
     CategoricalHisto algoHisto = new CategoricalHisto();
     CategoricalHisto statusHisto = new CategoricalHisto();
 
-    List<ModelMeta> models = listModels(experimentName);
+    List<ModelMeta> models = listModels(experimentName, 0, Integer.MAX_VALUE).getModels();
     if (models.isEmpty()) {
       return new ExperimentStats(experiment, metricStats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
     }
@@ -189,9 +189,9 @@ public class ExperimentStore {
     experiments.delete(experimentName);
   }
 
-  public List<ModelMeta> listModels(String experimentName) {
+  public ModelsMeta listModels(String experimentName, int offset, int limit) {
     getExperiment(experimentName);
-    return models.list(experimentName);
+    return models.list(experimentName, offset, limit);
   }
 
   public ModelMeta getModel(ModelKey modelKey) {

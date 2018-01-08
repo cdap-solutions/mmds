@@ -28,7 +28,6 @@ import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.EvaluationMetrics;
 import co.cask.mmds.data.Experiment;
 import co.cask.mmds.data.ExperimentMetaTable;
-import co.cask.mmds.data.Model;
 import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelStatus;
@@ -66,7 +65,7 @@ public class StoreTest extends TestBaseWithSpark2 {
     DataSetManager<Table> manager = getDataset(Constants.Dataset.EXPERIMENTS_META);
     ExperimentMetaTable experimentsTable = new ExperimentMetaTable(manager.get());
 
-    Assert.assertTrue(experimentsTable.list().isEmpty());
+    Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
 
     String experiment1Name = "exp123";
     Assert.assertNull(experimentsTable.get(experiment1Name));
@@ -75,24 +74,31 @@ public class StoreTest extends TestBaseWithSpark2 {
     experimentsTable.put(experiment1);
 
     Assert.assertEquals(experiment1, experimentsTable.get(experiment1Name));
-    Assert.assertEquals(ImmutableList.of(experiment1), experimentsTable.list());
+    Assert.assertEquals(ImmutableList.of(experiment1), experimentsTable.list(0, 2).getExperiments());
 
     String experiment2Name = "exp456";
     Experiment experiment2 = new Experiment(experiment2Name, "d", "s", "o", "string", "work2");
     experimentsTable.put(experiment2);
 
     Assert.assertEquals(experiment2, experimentsTable.get(experiment2Name));
-    Assert.assertEquals(ImmutableList.of(experiment1, experiment2), experimentsTable.list());
+    Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 2L);
+
+    List<Experiment> list = experimentsTable.list(0, 1).getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment1), list);
+    list = experimentsTable.list(1, 1).getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment2), list);
 
     experimentsTable.delete(experiment2Name);
     manager.flush();
     Assert.assertNull(experimentsTable.get(experiment2Name));
+    Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 1L);
 
     experimentsTable.delete(experiment1Name);
     manager.flush();
     Assert.assertNull(experimentsTable.get(experiment1Name));
 
-    Assert.assertTrue(experimentsTable.list().isEmpty());
+    Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
+    Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 0L);
   }
 
   @Test
@@ -104,8 +110,8 @@ public class StoreTest extends TestBaseWithSpark2 {
     Experiment experiment2 = new Experiment("e2", "", "path", "o1", "string", "workspace");
 
     Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), "abc")));
-    Assert.assertTrue(modelTable.list(experiment1.getName()).isEmpty());
-    Assert.assertTrue(modelTable.list(experiment2.getName()).isEmpty());
+    Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10).getModels().isEmpty());
+    Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
 
     long createTs = System.currentTimeMillis();
     CreateModelRequest createRequest = new CreateModelRequest("model1", "desc1");
@@ -130,9 +136,9 @@ public class StoreTest extends TestBaseWithSpark2 {
       .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
       .build();
 
-    Assert.assertEquals(ImmutableList.of(model1Meta), modelTable.list(experiment1.getName()));
+    Assert.assertEquals(ImmutableList.of(model1Meta), modelTable.list(experiment1.getName(), 0, 10).getModels());
     Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
-    Assert.assertEquals(ImmutableList.of(model2Meta), modelTable.list(experiment2.getName()));
+    Assert.assertEquals(ImmutableList.of(model2Meta), modelTable.list(experiment2.getName(), 0, 10).getModels());
     Assert.assertEquals(model2Meta, modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
 
     long trainTs = System.currentTimeMillis();
@@ -157,12 +163,12 @@ public class StoreTest extends TestBaseWithSpark2 {
 
     modelTable.delete(experiment1.getName());
     manager.flush();
-    Assert.assertTrue(modelTable.list(experiment1.getName()).isEmpty());
+    Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10).getModels().isEmpty());
     Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
-    Assert.assertFalse(modelTable.list(experiment2.getName()).isEmpty());
+    Assert.assertFalse(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
     modelTable.delete(experiment2.getName());
     manager.flush();
-    Assert.assertTrue(modelTable.list(experiment2.getName()).isEmpty());
+    Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
     Assert.assertNull(modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
   }
 
