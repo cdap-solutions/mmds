@@ -31,17 +31,19 @@ public class CategoricalHisto extends Histogram<CategoricalHisto> implements Ser
   }
 
   public void update(String val) {
+    totalCount++;
+    if (val == null) {
+      nullCount++;
+      return;
+    } else if (val.isEmpty()) {
+      emptyCount++;
+    }
+
     Long currentVal = counts.get(val);
     if (currentVal == null) {
       counts.put(val, 1L);
     } else {
       counts.put(val, currentVal + 1);
-    }
-    totalCount++;
-    if (val == null) {
-      nullCount++;
-    } else if (val.isEmpty()) {
-      emptyCount++;
     }
   }
 

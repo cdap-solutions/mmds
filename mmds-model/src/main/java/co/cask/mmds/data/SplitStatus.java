@@ -1,15 +1,20 @@
 package co.cask.mmds.data;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
  * Split states.
  */
 public enum SplitStatus {
-  @SerializedName("Splitting")
-  SPLITTING,
-  @SerializedName("Complete")
-  COMPLETE,
-  @SerializedName("Failed")
-  FAILED
+  SPLITTING("Splitting"),
+  COMPLETE("Complete"),
+  FAILED("Failed");
+  private final String label;
+
+  SplitStatus(String label) {
+    this.label = label;
+  }
+
+  @Override
+  public String toString() {
+    return label;
+  }
 }
