@@ -10,10 +10,12 @@ import java.util.Objects;
 public class SplitVal<T> {
   private final T train;
   private final T test;
+  private final T total;
 
-  public SplitVal(T train, T test) {
+  public SplitVal(T train, T test, T total) {
     this.train = train;
     this.test = test;
+    this.total = total;
   }
 
   public T getTrain() {
@@ -22,6 +24,10 @@ public class SplitVal<T> {
 
   public T getTest() {
     return test;
+  }
+
+  public T getTotal() {
+    return total;
   }
 
   @Override
@@ -35,11 +41,11 @@ public class SplitVal<T> {
 
     SplitVal<?> that = (SplitVal<?>) o;
 
-    return Objects.equals(train, that.train) && Objects.equals(test, that.test);
+    return Objects.equals(train, that.train) && Objects.equals(test, that.test) && Objects.equals(total, that.total);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(train, test);
+    return Objects.hash(train, test, total);
   }
 }

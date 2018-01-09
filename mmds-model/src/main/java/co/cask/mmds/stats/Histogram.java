@@ -23,5 +23,9 @@ public abstract class Histogram<T extends Histogram> implements Serializable {
     return nullCount;
   }
 
+  public long getNonNullCount() {
+    return totalCount - nullCount;
+  }
+
   public abstract T merge(T other);
 }
