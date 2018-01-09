@@ -1,7 +1,5 @@
 package co.cask.mmds.data;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
  * Model status. The state transition diagram is:
  *
@@ -40,20 +38,22 @@ import com.google.gson.annotations.SerializedName;
  * be assigned a different split, which moves it back to the SPLITTING state.
  */
 public enum ModelStatus {
-  @SerializedName("Empty")
-  EMPTY,
-  @SerializedName("Splitting")
-  SPLITTING,
-  @SerializedName("Split Failed")
-  SPLIT_FAILED,
-  @SerializedName("Data Ready")
-  DATA_READY,
-  @SerializedName("Training")
-  TRAINING,
-  @SerializedName("Trained")
-  TRAINED,
-  @SerializedName("Training Failed")
-  TRAINING_FAILED,
-  @SerializedName("Deployed")
-  DEPLOYED
+  EMPTY("Empty"),
+  SPLITTING("Splitting"),
+  SPLIT_FAILED("Split Failed"),
+  DATA_READY("Data Ready"),
+  TRAINING("Training"),
+  TRAINED("Trained"),
+  TRAINING_FAILED("Training Failed"),
+  DEPLOYED("Deployed");
+  private final String label;
+
+  ModelStatus(String label) {
+    this.label = label;
+  }
+
+  @Override
+  public String toString() {
+    return label;
+  }
 }

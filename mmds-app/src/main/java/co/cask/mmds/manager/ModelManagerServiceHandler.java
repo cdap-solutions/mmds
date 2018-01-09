@@ -42,6 +42,7 @@ import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.manager.runner.AlgorithmSpec;
+import co.cask.mmds.manager.runner.EnumStringTypeAdapterFactory;
 import co.cask.mmds.manager.runner.PipelineExecutor;
 import co.cask.mmds.modeler.Modelers;
 import co.cask.mmds.modeler.param.spec.ParamSpec;
@@ -86,6 +87,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   private static final Logger LOG = LoggerFactory.getLogger(ModelManagerServiceHandler.class);
   private static final Gson GSON = new GsonBuilder()
     .registerTypeAdapter(Schema.class, new SchemaTypeAdapter())
+    .registerTypeAdapterFactory(new EnumStringTypeAdapterFactory())
     .serializeSpecialFloatingPointValues()
     .create();
   private String modelMetaDataset;
@@ -314,7 +316,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
       }
     }).start();
 
-    responder.sendString(GSON.toJson(new Id(trainerInfo.getModelId())));
+    responder.sendStatus(200);
   }
 
   @DELETE

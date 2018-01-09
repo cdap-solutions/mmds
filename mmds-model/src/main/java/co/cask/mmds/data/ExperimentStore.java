@@ -70,7 +70,7 @@ public class ExperimentStore {
     Iterator<ModelMeta> modelIter = models.iterator();
     ModelMeta modelMeta = modelIter.next();
     algoHisto.update(modelMeta.getAlgorithm());
-    statusHisto.update(modelMeta.getStatus() == null ? null : modelMeta.getStatus().name());
+    statusHisto.update(modelMeta.getStatus() == null ? null : modelMeta.getStatus().toString());
 
     EvaluationMetrics metrics = modelMeta.getEvaluationMetrics();
     NumericStats rmse = new NumericStats(metrics.getRmse());
