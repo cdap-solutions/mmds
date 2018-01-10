@@ -407,7 +407,6 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
       store.deleteSplit(key);
       responder.sendStatus(200);
     });
-
   }
 
   /**

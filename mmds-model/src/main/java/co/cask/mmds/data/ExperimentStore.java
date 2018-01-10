@@ -275,7 +275,9 @@ public class ExperimentStore {
       throw new ModelNotFoundException(modelKey);
     }
     models.delete(modelKey);
-    splits.unregisterModel(new SplitKey(modelKey.getExperiment(), modelMeta.getSplit()), modelKey.getModel());
+    if (modelMeta.getSplit() != null) {
+      splits.unregisterModel(new SplitKey(modelKey.getExperiment(), modelMeta.getSplit()), modelKey.getModel());
+    }
   }
 
   public void deployModel(ModelKey key) {
