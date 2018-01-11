@@ -36,10 +36,12 @@ import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.Experiment;
 import co.cask.mmds.data.ExperimentMetaTable;
 import co.cask.mmds.data.ExperimentStore;
+import co.cask.mmds.data.ExperimentsMeta;
 import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
+import co.cask.mmds.data.ModelsMeta;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.manager.runner.AlgorithmSpec;
 import co.cask.mmds.manager.runner.EnumStringTypeAdapterFactory;
@@ -66,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,11 +77,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 /**
  * Model Service handler
@@ -90,6 +95,8 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     .registerTypeAdapterFactory(new EnumStringTypeAdapterFactory())
     .serializeSpecialFloatingPointValues()
     .create();
+  private static final String TOTAL_COUNT = "TOTAL-COUNT";
+  private static final String JSON_CONTENT_TYPE = "application/json";
   private String modelMetaDataset;
   private String modelComponentsDataset;
   private String experimentMetaDataset;
@@ -154,8 +161,28 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
    */
   @GET
   @Path("/experiments")
-  public void listExperiments(HttpServiceRequest request, HttpServiceResponder responder) {
-    runInTx(responder, store -> responder.sendString(GSON.toJson(store.listExperiments())));
+  public void listExperiments(HttpServiceRequest request, HttpServiceResponder responder,
+                              final @QueryParam("offset") @DefaultValue("0") int offset,
+                              final @QueryParam("limit") @DefaultValue("20") int limit) {
+    runInTx(responder, store -> {
+      validate(offset, limit);
+        ExperimentsMeta experimentsMeta = store.listExperiments(offset, limit);
+        Map<String, String> headers = new HashMap<>();
+        headers.put(TOTAL_COUNT, Long.toString(experimentsMeta.getTotalRowCount()));
+        //int status, ByteBuffer content, String contentType, Map<String, String> headers
+        responder.send(200, ByteBuffer.wrap(Bytes.toBytes(GSON.toJson(experimentsMeta.getExperiments()))),
+                       JSON_CONTENT_TYPE, headers);
+    });
+  }
+
+  private void validate(int offset, int limit) {
+    if (offset < 0) {
+      throw new BadRequestException("Offset must be zero or a positive number");
+    }
+
+    if (limit <= 0) {
+      throw new BadRequestException("Limit must be a positive number");
+    }
   }
 
   @GET
@@ -199,8 +226,17 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @GET
   @Path("/experiments/{experiment-name}/models")
   public void listModels(HttpServiceRequest request, HttpServiceResponder responder,
-                         final @PathParam("experiment-name") String experimentName) {
-    runInTx(responder, store -> responder.sendString(GSON.toJson(store.listModels(experimentName))));
+                         final @PathParam("experiment-name") String experimentName,
+                         final @QueryParam("offset") @DefaultValue("0") int offset,
+                         final @QueryParam("limit") @DefaultValue("20") int limit) {
+    runInTx(responder, store -> {
+        validate(offset, limit);
+        ModelsMeta modelsMeta = store.listModels(experimentName, offset, limit);
+        Map<String, String> headers = new HashMap<>();
+        headers.put(TOTAL_COUNT, Long.toString(modelsMeta.getTotalRowCount()));
+        responder.send(200, ByteBuffer.wrap(Bytes.toBytes(GSON.toJson(modelsMeta.getModels()))),
+                       JSON_CONTENT_TYPE, headers);
+    });
   }
 
   @GET
