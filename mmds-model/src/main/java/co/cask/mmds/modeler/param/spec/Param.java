@@ -8,13 +8,11 @@ import java.util.Map;
 public abstract class Param<T> {
   protected final String name;
   protected final String description;
-  protected final T defaultVal;
-  protected final T val;
+  private final T val;
 
   public Param(String name, String description, T defaultVal, Map<String, String> params) {
     this.name = name;
     this.description = description;
-    this.defaultVal = defaultVal;
     String strVal = params.get(name);
     this.val = strVal == null ? defaultVal : parseVal(strVal);
   }

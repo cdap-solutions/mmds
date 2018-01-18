@@ -13,6 +13,7 @@ public class IntParam extends Param<Integer> {
     spec = new ParamSpec("int", name, description, String.valueOf(defaultVal), null, range);
   }
 
+  @Override
   protected Integer parseVal(String strVal) {
     try {
       return Integer.parseInt(strVal);

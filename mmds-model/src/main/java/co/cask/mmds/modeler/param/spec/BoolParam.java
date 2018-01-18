@@ -18,6 +18,7 @@ public class BoolParam extends Param<Boolean> {
     this.spec = new ParamSpec("bool", name, description, String.valueOf(defaultVal), validValues, null);
   }
 
+  @Override
   protected Boolean parseVal(String strVal) {
     return Boolean.parseBoolean(strVal);
   }

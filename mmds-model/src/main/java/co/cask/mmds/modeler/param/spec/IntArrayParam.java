@@ -21,6 +21,7 @@ public class IntArrayParam extends Param<int[]> {
     spec = new ParamSpec("intarray", name, description, defaultStr.toString(), null, null);
   }
 
+  @Override
   protected int[] parseVal(String strVal) {
     String[] parts = strVal.split(",");
     int[] layers = new int[parts.length];
@@ -29,7 +30,7 @@ public class IntArrayParam extends Param<int[]> {
       try {
         int layer = Integer.parseInt(trimmed);
         if (layer < 1) {
-          throw new NumberFormatException(
+          throw new IllegalArgumentException(
             String.format("Invalid modeler parameter %s=%s. Must be a comma separate list of positive integers.",
                           name, strVal));
         }

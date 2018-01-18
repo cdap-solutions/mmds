@@ -13,6 +13,7 @@ public class DoubleParam extends Param<Double> {
     spec = new ParamSpec("double", name, description, String.valueOf(defaultVal), null, range);
   }
 
+  @Override
   protected Double parseVal(String strVal) {
     try {
       return Double.parseDouble(strVal);
