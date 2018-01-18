@@ -22,7 +22,7 @@ public class ParamSpec {
     this.type = type;
     this.description = description;
     this.defaultVal = defaultVal;
-    this.validValues = validValues == null ? new HashSet<String>() : Collections.unmodifiableSet(validValues);
+    this.validValues = validValues == null ? new HashSet<>() : Collections.unmodifiableSet(validValues);
     this.range = range;
   }
 

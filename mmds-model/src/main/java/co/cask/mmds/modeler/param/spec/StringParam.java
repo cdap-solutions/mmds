@@ -15,6 +15,7 @@ public class StringParam extends Param<String> {
     spec = new ParamSpec("string", name, description, defaultVal, validValues, null);
   }
 
+  @Override
   protected String parseVal(String strVal) {
     return strVal;
   }

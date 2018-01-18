@@ -1,6 +1,7 @@
 package co.cask.mmds.modeler.param;
 
 import co.cask.mmds.modeler.param.spec.DoubleParam;
+import co.cask.mmds.modeler.param.spec.IntArrayParam;
 import co.cask.mmds.modeler.param.spec.IntParam;
 import co.cask.mmds.modeler.param.spec.ParamSpec;
 import co.cask.mmds.modeler.param.spec.Params;
@@ -23,6 +24,7 @@ public class MultilayerPerceptronParams implements ModelerParams {
   private final DoubleParam tolerance;
   private final DoubleParam stepSize;
   private final StringParam solver;
+  private final IntArrayParam layers;
 
   public MultilayerPerceptronParams(Map<String, String> modelParams) {
     blockSize = new IntParam("blockSize",
@@ -48,9 +50,15 @@ public class MultilayerPerceptronParams implements ModelerParams {
                                "'l-bfgs' uses Limited-memory BFGS, " +
                                "which is a limited-memory quasi-Newton optimization method.",
                              "l-bfgs", ImmutableSet.of("gd", "l-bfgs"), modelParams);
+    layers = new IntArrayParam("layers", "Layers",
+                               "Sizes of layers from input layer to output layer. " +
+                                 "E.g., Array(780, 100, 10) means 780 inputs, " +
+                                 "one hidden layer with 100 neurons and output layer of 10 neurons.",
+                               new int[] { 200, 50, 10 }, modelParams);
   }
 
   public void setParams(MultilayerPerceptronClassifier modeler) {
+    modeler.setLayers(layers.getVal());
     modeler.setBlockSize(blockSize.getVal());
     modeler.setMaxIter(maxIterations.getVal());
     modeler.setTol(tolerance.getVal());
@@ -60,11 +68,11 @@ public class MultilayerPerceptronParams implements ModelerParams {
 
   @Override
   public Map<String, String> toMap() {
-    return Params.putParams(new HashMap<String, String>(), blockSize, maxIterations, tolerance, stepSize, solver);
+    return Params.putParams(new HashMap<>(), blockSize, maxIterations, tolerance, stepSize, solver);
   }
 
   @Override
   public List<ParamSpec> getSpec() {
-    return Params.addParams(new ArrayList<ParamSpec>(), blockSize, maxIterations, tolerance, stepSize, solver);
+    return Params.addParams(new ArrayList<>(), blockSize, maxIterations, tolerance, stepSize, solver);
   }
 }
