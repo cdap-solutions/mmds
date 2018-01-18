@@ -4,7 +4,6 @@ import co.cask.mmds.api.Modeler;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -24,10 +23,6 @@ public class Modelers {
     .put(Algorithm.CLASSIFIER_NAIVE_BAYES.getId(), new NaiveBayesModeler())
     .put(Algorithm.CLASSIFIER_RANDOM_FOREST.getId(), new RandomForestClassifierModeler())
     .build();
-
-  public static Set<String> getAlgorithms() {
-    return MODELERS.keySet();
-  }
 
   @Nullable
   public static Modeler getModeler(String algorithm) {

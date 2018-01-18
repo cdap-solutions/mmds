@@ -19,11 +19,12 @@ public class GBTParams extends TreeParams {
 
   public GBTParams(Map<String, String> modelParams) {
     super(modelParams);
-    maxIterations = new IntParam("maxIterations", "maximum number of iterations", 20, new Range(0, true), modelParams);
-    subsamplingRate = new DoubleParam("subsamplingRate",
+    maxIterations = new IntParam("maxIterations", "Max Iterations", "maximum number of iterations",
+                                 20, new Range(0, true), modelParams);
+    subsamplingRate = new DoubleParam("subsamplingRate", "Sub-sampling Rate",
                                       "Fraction of the training data used for learning each decision tree.",
                                       1.0d, new Range(0d, 1d, false, true), modelParams);
-    stepSize = new DoubleParam("stepSize",
+    stepSize = new DoubleParam("stepSize", "Step Size",
                                "Step size (a.k.a. learning rate) for shrinking the contribution of each estimator.",
                                0.1d, new Range(0d, 1d, false, true), modelParams);
   }

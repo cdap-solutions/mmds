@@ -3,7 +3,6 @@ package co.cask.mmds.modeler;
 import co.cask.mmds.api.AlgorithmType;
 import co.cask.mmds.api.Modeler;
 import co.cask.mmds.modeler.param.DecisionTreeClassifierParams;
-import co.cask.mmds.modeler.param.TreeParams;
 import org.apache.spark.ml.Predictor;
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel;
 import org.apache.spark.ml.classification.DecisionTreeClassifier;

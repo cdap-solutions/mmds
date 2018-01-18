@@ -8,9 +8,10 @@ import java.util.Map;
 public class DoubleParam extends Param<Double> {
   private final ParamSpec spec;
 
-  public DoubleParam(String name, String description, double defaultVal, Range range, Map<String, String> params) {
+  public DoubleParam(String name, String label, String description, double defaultVal,
+                     Range range, Map<String, String> params) {
     super(name, description, defaultVal, params);
-    spec = new ParamSpec("double", name, description, String.valueOf(defaultVal), null, range);
+    spec = new ParamSpec("double", name, label, description, String.valueOf(defaultVal), null, range);
   }
 
   @Override

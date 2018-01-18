@@ -18,7 +18,7 @@ public class DecisionTreeClassifierParams extends TreeParams {
 
   public DecisionTreeClassifierParams(Map<String, String> modelParams) {
     super(modelParams);
-    this.impurity = new StringParam("impurity", "Criterion used for information gain calculation", "gini",
+    this.impurity = new StringParam("impurity", "Impurity", "Criterion used for information gain calculation", "gini",
                                     ImmutableSet.of("gini", "entropy"), modelParams);
   }
 

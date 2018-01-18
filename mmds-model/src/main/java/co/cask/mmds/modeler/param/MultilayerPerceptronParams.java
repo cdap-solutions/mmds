@@ -27,24 +27,24 @@ public class MultilayerPerceptronParams implements ModelerParams {
   private final IntArrayParam layers;
 
   public MultilayerPerceptronParams(Map<String, String> modelParams) {
-    blockSize = new IntParam("blockSize",
+    blockSize = new IntParam("blockSize", "Block Size",
                              "Block size for stacking input data in matrices to speed up the computation. " +
                                "Data is stacked within partitions. If block size is more than remaining data in " +
                                "a partition then it is adjusted to the size of this data. " +
                                "Recommended size is between 10 and 1000.",
                              128, new Range(1, true), modelParams);
-    maxIterations = new IntParam("maxIterations", "maximum number of iterations",
+    maxIterations = new IntParam("maxIterations", "Max Iterations", "maximum number of iterations",
                                  100, new Range(0, true), modelParams);
-    tolerance = new DoubleParam("tolerance",
+    tolerance = new DoubleParam("tolerance", "Tolerance",
                                 "Convergence tolerance of iterations. " +
                                   "Smaller values will lead to higher accuracy with the cost of more iterations.",
                                 0.000001d, new Range(0d, true), modelParams);
     // only for 'gd' solver
-    stepSize = new DoubleParam("stepSize",
+    stepSize = new DoubleParam("stepSize", "Step Size",
                                "Step size to be used for each iteration of optimization. (only for 'gd' solver).",
                                0.03d, new Range(0d, false), modelParams);
     // "gd" (minibatch gradient descent) or "l-bfgs"
-    solver = new StringParam("solver",
+    solver = new StringParam("solver", "Solver",
                              "The solver algorithm for optimization. " +
                                "'gd' uses minibatch gradient descent. " +
                                "'l-bfgs' uses Limited-memory BFGS, " +

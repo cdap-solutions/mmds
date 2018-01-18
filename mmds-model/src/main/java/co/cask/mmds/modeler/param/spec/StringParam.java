@@ -9,10 +9,10 @@ import java.util.Set;
 public class StringParam extends Param<String> {
   private final ParamSpec spec;
 
-  public StringParam(String name, String description, String defaultVal, Set<String> validValues,
+  public StringParam(String name, String label, String description, String defaultVal, Set<String> validValues,
                      Map<String, String> params) {
     super(name, description, defaultVal, params);
-    spec = new ParamSpec("string", name, description, defaultVal, validValues, null);
+    spec = new ParamSpec("string", name, label, description, defaultVal, validValues, null);
   }
 
   @Override

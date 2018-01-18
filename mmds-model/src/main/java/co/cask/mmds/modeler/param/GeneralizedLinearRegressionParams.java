@@ -21,15 +21,15 @@ public class GeneralizedLinearRegressionParams extends RegressionParams {
   public GeneralizedLinearRegressionParams(Map<String, String> modelParams) {
     super(modelParams);
     // "gaussian", "binomial", "poisson" and "gamma"
-    family = new StringParam("family", "The error distribution to be used in the model.",
+    family = new StringParam("family", "Family", "The error distribution to be used in the model.",
                              "gaussian", ImmutableSet.of("gaussian", "binomial", "poisson", "gamma"), modelParams);
     // "identity", "log", "inverse", "logit", "probit", "cloglog" and "sqrt"
-    link = new StringParam("link",
+    link = new StringParam("link", "Link",
                            "Relationship between the linear predictor and the mean of the distribution function.",
                            "identity",
                            ImmutableSet.of("identity", "log", "inverse", "logit", "probit", "cloglog", "sqrt"),
                            modelParams);
-    fitIntercept = new BoolParam("fitIntercept", "If the intercept should be fit", true, modelParams);
+    fitIntercept = new BoolParam("fitIntercept", "Fit Intercept", "If the intercept should be fit", true, modelParams);
   }
 
   public void setParams(GeneralizedLinearRegression modeler) {
