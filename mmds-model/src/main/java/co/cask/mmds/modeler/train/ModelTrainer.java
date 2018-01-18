@@ -132,7 +132,7 @@ public class ModelTrainer {
         .map(new PredictionLabelFunction()).rdd();
     EvaluationMetrics evaluationMetrics;
     try {
-      if (modeler.getType() == AlgorithmType.REGRESSOR) {
+      if (modeler.getAlgorithm().getType() == AlgorithmType.REGRESSION) {
         RegressionMetrics metrics = new RegressionMetrics(predictionAndLabels, false);
         double rmse = metrics.rootMeanSquaredError();
         double r2 = metrics.r2();
@@ -176,7 +176,7 @@ public class ModelTrainer {
       .setFeatureNames(featureNames)
       .setCategoricalFeatures(categoricalFeatures)
       .setPredictions(predictionsClean)
-      .setAlgorithmType(modeler.getType())
+      .setAlgorithmType(modeler.getAlgorithm().getType())
       .setSchema(schema)
       .build();
   }

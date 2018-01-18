@@ -17,8 +17,8 @@ import java.util.Map;
 public class RandomForestClassifierModeler implements Modeler<RandomForestClassifier, RandomForestClassificationModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.CLASSIFICATION;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.CLASSIFICATION, "random.forest.classifier", "Random Forest Classifier");
   }
 
   @Override

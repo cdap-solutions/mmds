@@ -4,6 +4,6 @@ package co.cask.mmds.api;
  * Type of modeling algorithm.
  */
 public enum AlgorithmType {
-  REGRESSOR,
+  REGRESSION,
   CLASSIFICATION
 }

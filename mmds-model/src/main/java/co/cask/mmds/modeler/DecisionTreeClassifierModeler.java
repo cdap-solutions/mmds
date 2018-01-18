@@ -16,8 +16,8 @@ import java.util.Map;
 public class DecisionTreeClassifierModeler implements Modeler<DecisionTreeClassifier, DecisionTreeClassificationModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.CLASSIFICATION;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.CLASSIFICATION, "decision.tree.classifier", "Decision Tree Classifier");
   }
 
   @Override

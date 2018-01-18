@@ -16,8 +16,9 @@ import java.util.Map;
 public class GBTClassifierModeler implements Modeler<GBTClassifier, GBTClassificationModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.CLASSIFICATION;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.CLASSIFICATION,
+                         "gradient.boosted.tree.classifier", "Gradient Boosted Tree Classifier");
   }
 
   @Override

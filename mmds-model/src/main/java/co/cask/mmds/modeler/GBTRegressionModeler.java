@@ -16,8 +16,9 @@ import java.util.Map;
 public class GBTRegressionModeler implements Modeler<GBTRegressor, GBTRegressionModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.REGRESSOR;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.REGRESSION,
+                         "gradient.boosted.tree.regression", "Gradient Boosted Tree Regression");
   }
 
   @Override

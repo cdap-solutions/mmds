@@ -17,8 +17,8 @@ public class GeneralizedLinearRegressionModeler implements
   Modeler<GeneralizedLinearRegression, GeneralizedLinearRegressionModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.REGRESSOR;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.REGRESSION, "generalized.linear.regression", "Generalized Linear Regression");
   }
 
   @Override

@@ -68,11 +68,11 @@ public class MultilayerPerceptronParams implements ModelerParams {
 
   @Override
   public Map<String, String> toMap() {
-    return Params.putParams(new HashMap<>(), blockSize, maxIterations, tolerance, stepSize, solver);
+    return Params.putParams(new HashMap<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
   }
 
   @Override
   public List<ParamSpec> getSpec() {
-    return Params.addParams(new ArrayList<>(), blockSize, maxIterations, tolerance, stepSize, solver);
+    return Params.addParams(new ArrayList<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
   }
 }

@@ -1,7 +1,6 @@
 package co.cask.mmds.proto;
 
 import co.cask.mmds.api.Modeler;
-import co.cask.mmds.modeler.Algorithm;
 import co.cask.mmds.modeler.Modelers;
 import com.google.common.base.Joiner;
 
@@ -52,7 +51,7 @@ public class TrainModelRequest {
     if (modeler == null) {
       throw new BadRequestException(
         String.format("No modeler found for algorithm '%s'. Must be one of '%s'",
-                      algorithm, Joiner.on(',').join(Algorithm.values())));
+                      algorithm, Joiner.on(',').join(Modelers.getAlgorithms())));
     }
   }
 }

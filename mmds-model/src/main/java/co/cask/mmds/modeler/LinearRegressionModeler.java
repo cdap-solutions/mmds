@@ -16,8 +16,8 @@ import java.util.Map;
 public class LinearRegressionModeler implements Modeler<LinearRegression, LinearRegressionModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.REGRESSOR;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.REGRESSION, "linear.regression", "Linear Regression");
   }
 
   @Override

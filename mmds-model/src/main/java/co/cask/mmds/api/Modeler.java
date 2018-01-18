@@ -1,5 +1,6 @@
 package co.cask.mmds.api;
 
+import co.cask.mmds.modeler.Algorithm;
 import co.cask.mmds.modeler.param.ModelerParams;
 import org.apache.spark.ml.PredictionModel;
 import org.apache.spark.ml.Predictor;
@@ -13,9 +14,9 @@ import java.util.Map;
 public interface Modeler<P extends Predictor<Vector, P, M>, M extends PredictionModel<Vector, M>> {
 
   /**
-   * @return getType of model.
+   * @return algorithm of the model.
    */
-  AlgorithmType getType();
+  Algorithm getAlgorithm();
 
   /**
    * Get the modeler parameters specified in the string map along with any default parameters that were missing

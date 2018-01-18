@@ -16,8 +16,8 @@ import java.util.Map;
 public class RandomForestRegressionModeler implements Modeler<RandomForestRegressor, RandomForestRegressionModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.REGRESSOR;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.REGRESSION, "random.forest.regression", "Random Forest Regression");
   }
 
   @Override

@@ -46,7 +46,6 @@ import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.manager.runner.AlgorithmSpec;
 import co.cask.mmds.manager.runner.EnumStringTypeAdapterFactory;
 import co.cask.mmds.manager.runner.PipelineExecutor;
-import co.cask.mmds.modeler.Algorithm;
 import co.cask.mmds.modeler.Modelers;
 import co.cask.mmds.modeler.param.spec.ParamSpec;
 import co.cask.mmds.modeler.train.ModelOutput;
@@ -133,14 +132,9 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/algorithms")
   public void listAlgorithms(HttpServiceRequest request, HttpServiceResponder responder) {
     List<AlgorithmSpec> algorithms = new ArrayList<>();
-    for (Algorithm algorithm : Algorithm.values()) {
-      Modeler modeler = Modelers.getModeler(algorithm.getId());
-      if (modeler == null) {
-        // should never be null
-        continue;
-      }
+    for (Modeler modeler : Modelers.getModelers()) {
       List<ParamSpec> paramSpecs = modeler.getParams(new HashMap<>()).getSpec();
-      algorithms.add(new AlgorithmSpec(algorithm.getId(), algorithm.getLabel(), paramSpecs));
+      algorithms.add(new AlgorithmSpec(modeler.getAlgorithm(), paramSpecs));
     }
     responder.sendString(GSON.toJson(algorithms));
   }
@@ -149,14 +143,13 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/algorithms/{algorithm}")
   public void getAlgorithm(HttpServiceRequest request, HttpServiceResponder responder,
                            @PathParam("algorithm") String algorithm) {
-    Algorithm algo = fromId(algorithm);
     Modeler modeler = Modelers.getModeler(algorithm);
-    if (modeler == null || algo == null) {
+    if (modeler == null) {
       responder.sendError(404, "Algorithm " + algorithm + " not found.");
       return;
     }
     List<ParamSpec> paramSpecs = modeler.getParams(new HashMap<>()).getSpec();
-    responder.sendString(GSON.toJson(new AlgorithmSpec(algo.getId(), algo.getLabel(), paramSpecs)));
+    responder.sendString(GSON.toJson(new AlgorithmSpec(modeler.getAlgorithm(), paramSpecs)));
   }
 
   /**
@@ -449,15 +442,6 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
       store.deleteSplit(key);
       responder.sendStatus(200);
     });
-  }
-
-  private Algorithm fromId(String id) {
-    for (Algorithm algorithm : Algorithm.values()) {
-      if (algorithm.getId().equals(id)) {
-        return algorithm;
-      }
-    }
-    return null;
   }
 
   /**
