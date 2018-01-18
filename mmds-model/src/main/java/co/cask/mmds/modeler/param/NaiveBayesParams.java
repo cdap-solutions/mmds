@@ -21,8 +21,8 @@ public class NaiveBayesParams implements ModelerParams {
   private final StringParam type;
 
   public NaiveBayesParams(Map<String, String> modelParams) {
-    smoothing = new DoubleParam("smoothing", "smoothing parameter", 1.0d, new Range(0, true), modelParams);
-    type = new StringParam("type", "model type", "multinomial",
+    smoothing = new DoubleParam("smoothing", "Smoothing", "smoothing parameter", 1.0d, new Range(0, true), modelParams);
+    type = new StringParam("type", "Type", "model type", "multinomial",
                            ImmutableSet.of("multinomial", "bernoulli"), modelParams);
   }
 

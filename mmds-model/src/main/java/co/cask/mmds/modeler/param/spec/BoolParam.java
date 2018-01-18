@@ -10,12 +10,12 @@ import java.util.Set;
 public class BoolParam extends Param<Boolean> {
   private final ParamSpec spec;
 
-  public BoolParam(String name, String description, boolean defaultVal, Map<String, String> params) {
+  public BoolParam(String name, String label, String description, boolean defaultVal, Map<String, String> params) {
     super(name, description, defaultVal, params);
     Set<String> validValues = new HashSet<>();
     validValues.add("true");
     validValues.add("false");
-    this.spec = new ParamSpec("bool", name, description, String.valueOf(defaultVal), validValues, null);
+    this.spec = new ParamSpec("bool", name, label, description, String.valueOf(defaultVal), validValues, null);
   }
 
   @Override

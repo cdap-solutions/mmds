@@ -17,8 +17,9 @@ public class MultilayerPerceptronModeler
   implements Modeler<MultilayerPerceptronClassifier, MultilayerPerceptronClassificationModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.CLASSIFICATION;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.CLASSIFICATION,
+                         "multilayer.perceptron.classifier", "Multi-Layer Perceptron Classifier");
   }
 
   @Override

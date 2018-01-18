@@ -1,36 +1,43 @@
 package co.cask.mmds.modeler;
 
 import co.cask.mmds.api.Modeler;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
  * Collection of built in Modelers.
  */
 public class Modelers {
-  private static final Map<String, Modeler> MODELERS = ImmutableMap.<String, Modeler>builder()
-    .put(Algorithm.REGRESSION_DECISION_TREE.getId(), new DecisionTreeRegressionModeler())
-    .put(Algorithm.REGRESSION_GENERALIZED_LINEAR.getId(), new GeneralizedLinearRegressionModeler())
-    .put(Algorithm.REGRESSION_GRADIENT_BOOSTED_TREE.getId(), new GBTRegressionModeler())
-    .put(Algorithm.REGRESSION_LINEAR.getId(), new LinearRegressionModeler())
-    .put(Algorithm.REGRESSION_RANDOM_FOREST.getId(), new RandomForestRegressionModeler())
-    .put(Algorithm.CLASSIFIER_DECISION_TREE.getId(), new DecisionTreeClassifierModeler())
-    .put(Algorithm.CLASSIFIER_GRADIENT_BOOSTED_TREE.getId(), new GBTClassifierModeler())
-    .put(Algorithm.CLASSIFIER_LOGISTIC_REGRESSION.getId(), new LogisticRegressionModeler())
-    .put(Algorithm.CLASSIFIER_MULTILAYER_PERCEPTRON.getId(), new MultilayerPerceptronModeler())
-    .put(Algorithm.CLASSIFIER_NAIVE_BAYES.getId(), new NaiveBayesModeler())
-    .put(Algorithm.CLASSIFIER_RANDOM_FOREST.getId(), new RandomForestClassifierModeler())
-    .build();
+  private static final List<Modeler> MODELERS = ImmutableList.of(
+    new DecisionTreeRegressionModeler(),
+    new GeneralizedLinearRegressionModeler(),
+    new GBTRegressionModeler(),
+    new LinearRegressionModeler(),
+    new RandomForestRegressionModeler(),
+    new DecisionTreeClassifierModeler(),
+    new GBTClassifierModeler(),
+    new LogisticRegressionModeler(),
+    new MultilayerPerceptronModeler(),
+    new NaiveBayesModeler(),
+    new RandomForestClassifierModeler());
+  private static final Map<String, Modeler> MODELER_MAP = MODELERS.stream().collect(
+    Collectors.toMap(modeler -> modeler.getAlgorithm().getId(), modeler -> modeler));
 
-  public static Set<String> getAlgorithms() {
-    return MODELERS.keySet();
+  public static Collection<String> getAlgorithms() {
+    return MODELER_MAP.keySet();
+  }
+
+  public static Collection<Modeler> getModelers() {
+    return MODELERS;
   }
 
   @Nullable
   public static Modeler getModeler(String algorithm) {
-    return MODELERS.get(algorithm);
+    return MODELER_MAP.get(algorithm);
   }
 }

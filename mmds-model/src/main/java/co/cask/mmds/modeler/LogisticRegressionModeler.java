@@ -16,8 +16,8 @@ import java.util.Map;
 public class LogisticRegressionModeler implements Modeler<LogisticRegression, LogisticRegressionModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.CLASSIFICATION;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.CLASSIFICATION, "logistic.regression", "Logistic Regression");
   }
 
   @Override

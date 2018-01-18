@@ -21,14 +21,14 @@ public class RandomForestParams extends TreeParams {
 
   public RandomForestParams(Map<String, String> modelParams, String defaultSubsetStrategy) {
     super(modelParams);
-    this.numTrees = new IntParam("numTrees",
+    this.numTrees = new IntParam("numTrees", "Num Trees",
                                  "Number of trees to train. " +
                                    "If 1, then no bootstrapping is used. If > 1, then bootstrapping is done.",
                                  20, new Range(1, true), modelParams);
-    this.subsamplingRate = new DoubleParam("subsamplingRate",
+    this.subsamplingRate = new DoubleParam("subsamplingRate", "Sub-sampling Rate",
                                            "Fraction of the training data used for learning each decision tree.",
                                            1.0d, new Range(0d, 1d, false, true), modelParams);
-    this.featureSubsetStrategy = new StringParam("featureSubsetStrategy",
+    this.featureSubsetStrategy = new StringParam("featureSubsetStrategy", "Feature Subset Strategy",
                                                  "The number of features to consider for splits at each tree node. " +
                                                    "'auto' chooses automatically for task: " +
                                                    "If numTrees == 1, sets to 'all.' " +

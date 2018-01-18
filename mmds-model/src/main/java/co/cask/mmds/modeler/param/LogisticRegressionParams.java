@@ -21,7 +21,7 @@ public class LogisticRegressionParams extends RegressionParams {
   public LogisticRegressionParams(Map<String, String> modelParams) {
     super(modelParams);
     // [0, 1]
-    threshold = new DoubleParam("threshold",
+    threshold = new DoubleParam("threshold", "Threshold",
                                 "Threshold in binary classification. " +
                                   "If the estimated probability of class label 1 is greater than threshold, " +
                                   "then predict 1, else 0. " +
@@ -29,7 +29,7 @@ public class LogisticRegressionParams extends RegressionParams {
                                   "A low threshold encourages the model to predict 1 more often.",
                                 0.5d, new Range(0d, 1d, true, true), modelParams);
     // auto, binomial, multinomial
-    family = new StringParam("family",
+    family = new StringParam("family", "Family",
                              "Label distribution to be used in the model. " +
                                "'auto' will automatically select the family based on the number of classes. " +
                                "If numClasses == 1 or numClasses == 2, sets to 'binomial'. " +

@@ -19,9 +19,9 @@ public class LinearRegressionParams extends RegressionParams {
 
   public LinearRegressionParams(Map<String, String> modelParams) {
     super(modelParams);
-    fitIntercept = new BoolParam("fitIntercept", "If the intercept should be fit", true, modelParams);
+    fitIntercept = new BoolParam("fitIntercept", "Fit Intercept", "If the intercept should be fit", true, modelParams);
     // "l-bfgs", "normal" and "auto"
-    solver = new StringParam("solver",
+    solver = new StringParam("solver", "Solver",
                              "The solver algorithm used for optimization. " +
                                "'l-bfgs' uses Limited-memory BFGS, " +
                                "which is a limited-memory quasi-Newton optimization method. " +

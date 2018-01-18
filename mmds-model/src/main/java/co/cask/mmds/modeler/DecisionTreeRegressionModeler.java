@@ -16,8 +16,8 @@ import java.util.Map;
 public class DecisionTreeRegressionModeler implements Modeler<DecisionTreeRegressor, DecisionTreeRegressionModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.REGRESSOR;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.REGRESSION, "decision.tree.regression", "Decision Tree Regression");
   }
 
   @Override

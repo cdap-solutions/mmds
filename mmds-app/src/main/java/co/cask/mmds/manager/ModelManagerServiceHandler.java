@@ -132,10 +132,9 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/algorithms")
   public void listAlgorithms(HttpServiceRequest request, HttpServiceResponder responder) {
     List<AlgorithmSpec> algorithms = new ArrayList<>();
-    for (String algorithm : Modelers.getAlgorithms()) {
-      Modeler modeler = Modelers.getModeler(algorithm);
+    for (Modeler modeler : Modelers.getModelers()) {
       List<ParamSpec> paramSpecs = modeler.getParams(new HashMap<>()).getSpec();
-      algorithms.add(new AlgorithmSpec(algorithm, paramSpecs));
+      algorithms.add(new AlgorithmSpec(modeler.getAlgorithm(), paramSpecs));
     }
     responder.sendString(GSON.toJson(algorithms));
   }
@@ -150,7 +149,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
       return;
     }
     List<ParamSpec> paramSpecs = modeler.getParams(new HashMap<>()).getSpec();
-    responder.sendString(GSON.toJson(new AlgorithmSpec(algorithm, paramSpecs)));
+    responder.sendString(GSON.toJson(new AlgorithmSpec(modeler.getAlgorithm(), paramSpecs)));
   }
 
   /**

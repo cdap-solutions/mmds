@@ -66,7 +66,7 @@ public class ModelOutputWriter {
     if (predictionsDataset != null) {
       if (!admin.datasetExists(predictionsDataset)) {
         List<Schema.Field> predictionFields = new ArrayList<>();
-        Schema.Type predictionType = modelOutput.getAlgorithmType() == AlgorithmType.REGRESSOR ?
+        Schema.Type predictionType = modelOutput.getAlgorithmType() == AlgorithmType.REGRESSION ?
           Schema.Type.DOUBLE : Schema.Type.STRING;
         predictionFields.add(Schema.Field.of("prediction", Schema.of(predictionType)));
         predictionFields.addAll(modelOutput.getSchema().getFields());

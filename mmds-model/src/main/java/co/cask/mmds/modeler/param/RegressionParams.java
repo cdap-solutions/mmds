@@ -23,19 +23,20 @@ public abstract class RegressionParams implements ModelerParams {
   protected final DoubleParam tolerance;
 
   protected RegressionParams(Map<String, String> modelParams) {
-    maxIterations = new IntParam("maxIterations", "max number of iterations", 100, new Range(1, true), modelParams);
-    standardization = new BoolParam("standardization",
+    maxIterations = new IntParam("maxIterations", "Max Iterations", "max number of iterations",
+                                 100, new Range(1, true), modelParams);
+    standardization = new BoolParam("standardization", "Standardization",
                                     "Whether to standardize the training features before fitting the model.",
                                     true, modelParams);
-    regularizationParam = new DoubleParam("regularizationParam", "regularization parameter", 0.0d,
-                                          new Range(0d, true), modelParams);
-    elasticNetParam = new DoubleParam("elasticNetParam",
+    regularizationParam = new DoubleParam("regularizationParam", "Regularization Param", "regularization parameter",
+                                          0.0d, new Range(0d, true), modelParams);
+    elasticNetParam = new DoubleParam("elasticNetParam", "Elastic Net Param",
                                       "The ElasticNet mixing parameter. " +
                                         "For alpha = 0, the penalty is an L2 penalty. " +
                                         "For alpha = 1, it is an L1 penalty. " +
                                         "For alpha in (0,1), the penalty is a combination of L1 and L2.",
                                       0.0d, new Range(0d, 1d, true, true), modelParams);
-    tolerance = new DoubleParam("tolerance",
+    tolerance = new DoubleParam("tolerance", "Tolerance",
                                 "Convergence tolerance of iterations. " +
                                   "Smaller values will lead to higher accuracy with the cost of more iterations.",
                                 0.000001d, new Range(0d, true), modelParams);

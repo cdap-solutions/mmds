@@ -18,7 +18,7 @@ public class GBTRegressionParams extends GBTParams {
   public GBTRegressionParams(Map<String, String> modelParams) {
     super(modelParams);
     // squared or absolute
-    this.lossType = new StringParam("lossType",
+    this.lossType = new StringParam("lossType", "Loss Type",
                                     "Loss function which GBT tries to minimize. " +
                                       "Supports 'squared' (L2) and 'absolute' (L1)",
                                     "squared", ImmutableSet.of("squared", "absolute"), modelParams);

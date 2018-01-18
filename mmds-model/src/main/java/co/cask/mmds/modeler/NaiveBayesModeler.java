@@ -17,8 +17,8 @@ import java.util.Map;
 public class NaiveBayesModeler implements Modeler<NaiveBayes, NaiveBayesModel> {
 
   @Override
-  public AlgorithmType getType() {
-    return AlgorithmType.CLASSIFICATION;
+  public Algorithm getAlgorithm() {
+    return new Algorithm(AlgorithmType.CLASSIFICATION, "naive.bayes", "Naive Bayes");
   }
 
   @Override

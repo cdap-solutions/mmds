@@ -8,9 +8,10 @@ import java.util.Map;
 public class IntParam extends Param<Integer> {
   private final ParamSpec spec;
 
-  public IntParam(String name, String description, int defaultVal, Range range, Map<String, String> params) {
+  public IntParam(String name, String label, String description, int defaultVal,
+                  Range range, Map<String, String> params) {
     super(name, description, defaultVal, params);
-    spec = new ParamSpec("int", name, description, String.valueOf(defaultVal), null, range);
+    spec = new ParamSpec("int", name, label, description, String.valueOf(defaultVal), null, range);
   }
 
   @Override

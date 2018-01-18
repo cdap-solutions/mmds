@@ -100,7 +100,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
       throw new IllegalArgumentException(String.format("Model '%s' in experiment '%s' uses unknown algorithm '%s'",
                                                        conf.getModelID(), conf.getExperimentID(), meta.getAlgorithm()));
     }
-    if (modeler.getType() == AlgorithmType.REGRESSOR && predictionType == Schema.Type.STRING) {
+    if (modeler.getAlgorithm().getType() == AlgorithmType.REGRESSION && predictionType == Schema.Type.STRING) {
       throw new IllegalArgumentException(
         String.format("Invalid getType for prediction field '%s'. " +
                         "Model '%s' in experiment '%s' is a regression model, " +
@@ -140,7 +140,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     }
 
     targetIndexPath = getComponentPath(modelFiles, Constants.Component.TARGET_INDICES);
-    if (targetIndexPath == null && modeler.getType() == AlgorithmType.CLASSIFICATION &&
+    if (targetIndexPath == null && modeler.getAlgorithm().getType() == AlgorithmType.CLASSIFICATION &&
       predictionType == Schema.Type.STRING) {
       throw new IllegalArgumentException(
         String.format("Could not find target index data for model '%s' in experiment '%s'. " +
@@ -178,7 +178,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     Dataset predictions = model.transform(featureData);
     predictions.show();
 
-    if (modeler.getType() == AlgorithmType.CLASSIFICATION && predictionType == Schema.Type.STRING) {
+    if (modeler.getAlgorithm().getType() == AlgorithmType.CLASSIFICATION && predictionType == Schema.Type.STRING) {
       StringIndexerModel indexerModel = StringIndexerModel.load(targetIndexPath);
       String[] labels = indexerModel.labels();
       IndexToString reverseIndex = new IndexToString()

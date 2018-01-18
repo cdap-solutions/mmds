@@ -8,7 +8,7 @@ import java.util.Map;
 public class IntArrayParam extends Param<int[]> {
   private final ParamSpec spec;
 
-  public IntArrayParam(String name, String description, int[] defaultVal,
+  public IntArrayParam(String name, String label, String description, int[] defaultVal,
                        Map<String, String> params) {
     super(name, description, defaultVal, params);
     StringBuilder defaultStr = new StringBuilder();
@@ -18,7 +18,7 @@ public class IntArrayParam extends Param<int[]> {
     for (int i = 1; i < defaultVal.length; i++) {
       defaultStr.append(',').append(defaultVal[i]);
     }
-    spec = new ParamSpec("intarray", name, description, defaultStr.toString(), null, null);
+    spec = new ParamSpec("intarray", name, label, description, defaultStr.toString(), null, null);
   }
 
   @Override
