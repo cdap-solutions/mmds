@@ -159,7 +159,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                               final @QueryParam("limit") @DefaultValue("20") int limit) {
     runInTx(responder, store -> {
       validate(offset, limit);
-        responder.sendString(GSON.toJson(store.listExperiments(offset, limit)));
+      responder.sendString(GSON.toJson(store.listExperiments(offset, limit)));
     });
   }
 
@@ -218,7 +218,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                          final @QueryParam("offset") @DefaultValue("0") int offset,
                          final @QueryParam("limit") @DefaultValue("20") int limit) {
     runInTx(responder, store -> {
-        validate(offset, limit);
+      validate(offset, limit);
       responder.sendString(GSON.toJson(store.listModels(experimentName, offset, limit)));
     });
   }
