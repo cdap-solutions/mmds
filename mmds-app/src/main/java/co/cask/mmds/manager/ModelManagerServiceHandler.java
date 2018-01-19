@@ -36,12 +36,10 @@ import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.Experiment;
 import co.cask.mmds.data.ExperimentMetaTable;
 import co.cask.mmds.data.ExperimentStore;
-import co.cask.mmds.data.ExperimentsMeta;
 import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
-import co.cask.mmds.data.ModelsMeta;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.manager.runner.AlgorithmSpec;
 import co.cask.mmds.manager.runner.EnumStringTypeAdapterFactory;
@@ -68,7 +66,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,8 +92,6 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     .registerTypeAdapterFactory(new EnumStringTypeAdapterFactory())
     .serializeSpecialFloatingPointValues()
     .create();
-  private static final String TOTAL_COUNT = "TOTAL-COUNT";
-  private static final String JSON_CONTENT_TYPE = "application/json";
   private String modelMetaDataset;
   private String modelComponentsDataset;
   private String experimentMetaDataset;
@@ -165,12 +160,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                               final @QueryParam("limit") @DefaultValue("20") int limit) {
     runInTx(responder, store -> {
       validate(offset, limit);
-        ExperimentsMeta experimentsMeta = store.listExperiments(offset, limit);
-        Map<String, String> headers = new HashMap<>();
-        headers.put(TOTAL_COUNT, Long.toString(experimentsMeta.getTotalRowCount()));
-        //int status, ByteBuffer content, String contentType, Map<String, String> headers
-        responder.send(200, ByteBuffer.wrap(Bytes.toBytes(GSON.toJson(experimentsMeta.getExperiments()))),
-                       JSON_CONTENT_TYPE, headers);
+      responder.sendString(GSON.toJson(store.listExperiments(offset, limit)));
     });
   }
 
@@ -229,12 +219,8 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                          final @QueryParam("offset") @DefaultValue("0") int offset,
                          final @QueryParam("limit") @DefaultValue("20") int limit) {
     runInTx(responder, store -> {
-        validate(offset, limit);
-        ModelsMeta modelsMeta = store.listModels(experimentName, offset, limit);
-        Map<String, String> headers = new HashMap<>();
-        headers.put(TOTAL_COUNT, Long.toString(modelsMeta.getTotalRowCount()));
-        responder.send(200, ByteBuffer.wrap(Bytes.toBytes(GSON.toJson(modelsMeta.getModels()))),
-                       JSON_CONTENT_TYPE, headers);
+      validate(offset, limit);
+      responder.sendString(GSON.toJson(store.listModels(experimentName, offset, limit)));
     });
   }
 
