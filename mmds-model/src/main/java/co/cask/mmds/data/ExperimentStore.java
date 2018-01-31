@@ -16,8 +16,6 @@ import co.cask.mmds.stats.NumericHisto;
 import co.cask.mmds.stats.NumericStats;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +27,6 @@ import java.util.Set;
  * Manages experiments, splits, and models.
  */
 public class ExperimentStore {
-  private static final Logger LOG = LoggerFactory.getLogger(ExperimentStore.class);
   private static final Set<Schema.Type> CATEGORICAL_TYPES = ImmutableSet.of(Schema.Type.BOOLEAN, Schema.Type.STRING);
   private static final Set<Schema.Type> NUMERIC_TYPES =
     ImmutableSet.of(Schema.Type.INT, Schema.Type.LONG, Schema.Type.FLOAT, Schema.Type.DOUBLE);
@@ -209,9 +206,7 @@ public class ExperimentStore {
     ModelStatus currentStatus = meta.getStatus();
 
     if (currentStatus != ModelStatus.DATA_READY) {
-      throw new ConflictException(String.format("Cannot train a model that is in the '%s' state. " +
-                                                  "The split must finish successfully before a model can be trained.",
-                                                currentStatus));
+      throw new ConflictException(String.format("Cannot train a model that is in the '%s' state.", currentStatus));
     }
 
     Modeler modeler = Modelers.getModeler(trainRequest.getAlgorithm());

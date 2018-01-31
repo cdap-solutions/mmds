@@ -250,10 +250,18 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   public void addModel(HttpServiceRequest request, HttpServiceResponder responder,
                        @PathParam("experiment-name") final String experimentName) throws Exception {
     runInTx(responder, store -> {
-      CreateModelRequest createRequest = GSON.fromJson(Bytes.toString(request.getContent()), CreateModelRequest.class);
-      createRequest.validate();
-      String modelId = store.addModel(experimentName, createRequest);
-      responder.sendString(GSON.toJson(new Id(modelId)));
+      try {
+        CreateModelRequest createRequest =
+          GSON.fromJson(Bytes.toString(request.getContent()), CreateModelRequest.class);
+
+        createRequest.validate();
+        String modelId = store.addModel(experimentName, createRequest);
+        responder.sendString(GSON.toJson(new Id(modelId)));
+      } catch (JsonParseException e) {
+        throw new BadRequestException(
+          String.format("Problem occurred while parsing request to create model in experiment '%s'. " +
+                          "Error: %s", experimentName, e.getMessage()));
+      }
     });
   }
 
@@ -275,12 +283,18 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                          @PathParam("experiment-name") final String experimentName,
                          @PathParam("model-id") final String modelId) throws Exception {
     ModelTrainerInfo trainerInfo = callInTx(responder, store -> {
-      TrainModelRequest trainRequest = GSON.fromJson(Bytes.toString(request.getContent()), TrainModelRequest.class);
-      trainRequest.validate();
+      try {
+        TrainModelRequest trainRequest = GSON.fromJson(Bytes.toString(request.getContent()), TrainModelRequest.class);
+        trainRequest.validate();
 
-      ModelKey modelKey = new ModelKey(experimentName, modelId);
+        ModelKey modelKey = new ModelKey(experimentName, modelId);
 
-      return store.trainModel(modelKey, trainRequest);
+        return store.trainModel(modelKey, trainRequest);
+      } catch (JsonParseException e) {
+        throw new BadRequestException(
+          String.format("Problem occurred while parsing request for model training for experiment '%s'. " +
+                          "Error: %s", experimentName, e.getMessage()));
+      }
     });
 
     // happens if there was an error above
@@ -317,7 +331,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
         runInTx(store -> store.updateModelMetrics(modelKey, modelOutput.getEvaluationMetrics(),
                                                   System.currentTimeMillis(), modelOutput.getFeatureNames(),
                                                   modelOutput.getCategoricalFeatures()));
-      } catch (Exception e) {
+      } catch (Throwable e) {
         LOG.error("Error training model {} in experiment {}.", modelKey.getModel(), modelKey.getExperiment(), e);
         try {
           runInTx(store -> store.modelFailed(modelKey));
