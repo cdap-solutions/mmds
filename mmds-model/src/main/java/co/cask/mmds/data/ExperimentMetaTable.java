@@ -12,6 +12,7 @@ import co.cask.cdap.api.dataset.table.Table;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
@@ -56,6 +57,19 @@ public class ExperimentMetaTable extends CountTable {
    * @return all experiments starting from offset
    */
   public ExperimentsMeta list(int offset, int limit) {
+    return list(offset, limit, null);
+  }
+
+  /**
+   * List all experiments. Never returns null. If there are no experiments, returns an empty list.
+   *
+   * @param offset the number of initial experiments to ignore and not add to the results
+   * @param limit upper limit on number of results returned.
+   * @param predicate predicate to filter experiments
+   *
+   * @return all experiments starting from offset with given source path
+   */
+  public ExperimentsMeta list(int offset, int limit, Predicate<Experiment> predicate) {
     Scan scan = new Scan(new byte[] { 0, 0 }, null);
     int count = 0;
     int cursor = 0;
@@ -74,13 +88,18 @@ public class ExperimentMetaTable extends CountTable {
           break;
         }
 
-        experiments.add(fromRow(row));
-        count++;
+        Experiment e = fromRow(row);
+
+        if (predicate == null || predicate.test(e)) {
+          experiments.add(e);
+          count++;
+        }
       }
     }
 
     return new ExperimentsMeta(getTotalCount(), experiments);
   }
+
 
   /**
    * Get information about the specified experiment.
@@ -110,6 +129,7 @@ public class ExperimentMetaTable extends CountTable {
    * @param experiment the experiment to write
    */
   public void put(Experiment experiment) {
+    boolean isNewExperiment = get(experiment.getName()) == null;
     Put put = new Put(experiment.getName())
       .add(NAME_COL, experiment.getName())
       .add(DESC_COL, experiment.getDescription())
@@ -118,7 +138,10 @@ public class ExperimentMetaTable extends CountTable {
       .add(OUTCOME_TYPE_COL, experiment.getOutcomeType())
       .add(WORKSPACE_COL, experiment.getWorkspaceId());
     table.put(put);
-    incrementRowCount();
+
+    if (isNewExperiment) {
+      incrementRowCount();
+    }
   }
 
   private Experiment fromRow(Row row) {
