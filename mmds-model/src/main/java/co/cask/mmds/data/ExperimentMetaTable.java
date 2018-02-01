@@ -129,6 +129,7 @@ public class ExperimentMetaTable extends CountTable {
    * @param experiment the experiment to write
    */
   public void put(Experiment experiment) {
+    boolean isNewExperiment = get(experiment.getName()) == null;
     Put put = new Put(experiment.getName())
       .add(NAME_COL, experiment.getName())
       .add(DESC_COL, experiment.getDescription())
@@ -137,7 +138,10 @@ public class ExperimentMetaTable extends CountTable {
       .add(OUTCOME_TYPE_COL, experiment.getOutcomeType())
       .add(WORKSPACE_COL, experiment.getWorkspaceId());
     table.put(put);
-    incrementRowCount();
+
+    if (isNewExperiment) {
+      incrementRowCount();
+    }
   }
 
   private Experiment fromRow(Row row) {
