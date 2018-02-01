@@ -47,6 +47,10 @@ public class ExperimentStore {
     return experiments.list(offset, limit);
   }
 
+  public ExperimentsMeta listExperiments(int offset, int limit, String srcPath) {
+    return experiments.list(offset, limit, srcPath);
+  }
+
   public Experiment getExperiment(String experimentName) {
     Experiment experiment = experiments.get(experimentName);
     if (experiment == null) {

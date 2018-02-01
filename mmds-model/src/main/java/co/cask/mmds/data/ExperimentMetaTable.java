@@ -56,6 +56,19 @@ public class ExperimentMetaTable extends CountTable {
    * @return all experiments starting from offset
    */
   public ExperimentsMeta list(int offset, int limit) {
+    return list(offset, limit, "");
+  }
+
+  /**
+   * List all experiments. Never returns null. If there are no experiments, returns an empty list.
+   *
+   * @param offset the number of initial experiments to ignore and not add to the results
+   * @param limit upper limit on number of results returned.
+   * @param srcPath source path for experiment
+   *
+   * @return all experiments starting from offset with given source path
+   */
+  public ExperimentsMeta list(int offset, int limit, String srcPath) {
     Scan scan = new Scan(new byte[] { 0, 0 }, null);
     int count = 0;
     int cursor = 0;
@@ -74,13 +87,18 @@ public class ExperimentMetaTable extends CountTable {
           break;
         }
 
-        experiments.add(fromRow(row));
+        Experiment e = fromRow(row);
+
+        if (srcPath.isEmpty() || srcPath.equals(e.getSrcpath())) {
+          experiments.add(e);
+        }
         count++;
       }
     }
 
     return new ExperimentsMeta(getTotalCount(), experiments);
   }
+
 
   /**
    * Get information about the specified experiment.

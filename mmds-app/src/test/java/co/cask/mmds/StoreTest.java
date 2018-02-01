@@ -88,6 +88,9 @@ public class StoreTest extends TestBaseWithSpark2 {
     list = experimentsTable.list(1, 1).getExperiments();
     Assert.assertEquals(ImmutableList.of(experiment2), list);
 
+    list = experimentsTable.list(0, 1, "src").getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment1), list);
+
     experimentsTable.delete(experiment2Name);
     manager.flush();
     Assert.assertNull(experimentsTable.get(experiment2Name));
