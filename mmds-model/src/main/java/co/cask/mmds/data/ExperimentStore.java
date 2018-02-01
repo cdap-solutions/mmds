@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Manages experiments, splits, and models.
@@ -47,8 +48,8 @@ public class ExperimentStore {
     return experiments.list(offset, limit);
   }
 
-  public ExperimentsMeta listExperiments(int offset, int limit, String srcPath) {
-    return experiments.list(offset, limit, srcPath);
+  public ExperimentsMeta listExperiments(int offset, int limit, Predicate<Experiment> predicate) {
+    return experiments.list(offset, limit, predicate);
   }
 
   public Experiment getExperiment(String experimentName) {

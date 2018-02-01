@@ -12,6 +12,7 @@ import co.cask.cdap.api.dataset.table.Table;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
@@ -56,7 +57,7 @@ public class ExperimentMetaTable extends CountTable {
    * @return all experiments starting from offset
    */
   public ExperimentsMeta list(int offset, int limit) {
-    return list(offset, limit, "");
+    return list(offset, limit, null);
   }
 
   /**
@@ -64,11 +65,11 @@ public class ExperimentMetaTable extends CountTable {
    *
    * @param offset the number of initial experiments to ignore and not add to the results
    * @param limit upper limit on number of results returned.
-   * @param srcPath source path for experiment
+   * @param predicate predicate to filter experiments
    *
    * @return all experiments starting from offset with given source path
    */
-  public ExperimentsMeta list(int offset, int limit, String srcPath) {
+  public ExperimentsMeta list(int offset, int limit, Predicate<Experiment> predicate) {
     Scan scan = new Scan(new byte[] { 0, 0 }, null);
     int count = 0;
     int cursor = 0;
@@ -89,10 +90,10 @@ public class ExperimentMetaTable extends CountTable {
 
         Experiment e = fromRow(row);
 
-        if (srcPath.isEmpty() || srcPath.equals(e.getSrcpath())) {
+        if (predicate == null || predicate.test(e)) {
           experiments.add(e);
+          count++;
         }
-        count++;
       }
     }
 
