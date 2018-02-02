@@ -1,4 +1,4 @@
-package co.cask.mmds.plugin;
+package co.cask.mmds.manager.splitter;
 
 import co.cask.mmds.stats.NumericHisto;
 import org.apache.spark.api.java.function.PairFunction;

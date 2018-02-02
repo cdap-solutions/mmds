@@ -1,4 +1,4 @@
-package co.cask.mmds.manager.runner;
+package co.cask.mmds.manager;
 
 import co.cask.mmds.api.AlgorithmType;
 import co.cask.mmds.modeler.Algorithm;

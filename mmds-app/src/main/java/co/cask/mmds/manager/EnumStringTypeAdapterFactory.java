@@ -1,4 +1,4 @@
-package co.cask.mmds.manager.runner;
+package co.cask.mmds.manager;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;

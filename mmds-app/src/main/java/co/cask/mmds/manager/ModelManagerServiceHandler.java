@@ -28,6 +28,7 @@ import co.cask.cdap.api.spark.service.SparkHttpServiceHandler;
 import co.cask.cdap.api.spark.sql.DataFrames;
 import co.cask.cdap.internal.io.SchemaTypeAdapter;
 import co.cask.mmds.ModelLogging;
+import co.cask.mmds.SplitLogging;
 import co.cask.mmds.api.Modeler;
 import co.cask.mmds.data.DataSplit;
 import co.cask.mmds.data.DataSplitInfo;
@@ -41,9 +42,10 @@ import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SplitKey;
-import co.cask.mmds.manager.runner.AlgorithmSpec;
-import co.cask.mmds.manager.runner.EnumStringTypeAdapterFactory;
-import co.cask.mmds.manager.runner.PipelineExecutor;
+import co.cask.mmds.manager.splitter.DataSplitResult;
+import co.cask.mmds.manager.splitter.DataSplitStatsGenerator;
+import co.cask.mmds.manager.splitter.DatasetSplitter;
+import co.cask.mmds.manager.splitter.RandomDatasetSplitter;
 import co.cask.mmds.modeler.Modelers;
 import co.cask.mmds.modeler.param.spec.ParamSpec;
 import co.cask.mmds.modeler.train.ModelOutput;
@@ -99,7 +101,6 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   private ModelOutputWriter modelOutputWriter;
   private SparkSession sparkSession;
   private SparkHttpServiceContext context;
-  private PipelineExecutor pipelineExecutor;
 
   @Override
   public void initialize(SparkHttpServiceContext context) throws Exception {
@@ -110,7 +111,6 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     modelComponentsDataset = properties.get("modelComponentsDataset");
     experimentMetaDataset = properties.get("experimentMetaDataset");
     splitsDataset = properties.get("splitsDataset");
-    pipelineExecutor = new PipelineExecutor(context.getNamespace());
     context.execute(datasetContext -> {
       FileSet modelComponents = datasetContext.getDataset(modelComponentsDataset);
       modelOutputWriter = new ModelOutputWriter(context.getAdmin(), context,
@@ -408,8 +408,32 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     if (dataSplitInfo == null) {
       return;
     }
-    pipelineExecutor.split(dataSplitInfo);
-    responder.sendString(GSON.toJson(new Id(dataSplitInfo.getSplitId())));
+
+    String splitId = dataSplitInfo.getSplitId();
+    SplitKey splitKey = new SplitKey(experimentName, splitId);
+    new Thread(() -> {
+      SplitLogging.start(experimentName, splitId);
+      DatasetSplitter datasetSplitter = new RandomDatasetSplitter(20d);
+      try (DataSplitStatsGenerator splitStatsGenerator =
+             new DataSplitStatsGenerator(sparkSession, datasetSplitter,
+                                         context.getPluginContext(), context.getServiceDiscoverer())) {
+        DataSplitResult result = splitStatsGenerator.split(dataSplitInfo);
+        runInTx(store -> store.finishSplit(splitKey, result.getTrainingPath(),
+                                           result.getTestPath(), result.getStats()));
+      } catch (Exception e) {
+        LOG.error("Error generating split {} in experiment {}.", splitId, experimentName, e);
+        try {
+          runInTx(store -> store.splitFailed(splitKey));
+        } catch (TransactionFailureException te) {
+          LOG.error("Error marking split {} in experiment {} as failed",
+                    splitId, experimentName, te);
+        }
+      } finally {
+        SplitLogging.finish();
+      }
+    }).start();
+
+    responder.sendString(GSON.toJson(new Id(splitId)));
   }
 
   @GET
@@ -446,8 +470,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   }
 
   /**
-   * Run some logic in a transaction, catching certain exceptions and responding with the relevant error code.
-   * Any EndpointException thrown by the consumer will be handled automatically.
+   * Run some logic in a transaction.
    */
   private void runInTx(final Consumer<ExperimentStore> consumer) throws TransactionFailureException {
     context.execute((datasetContext) -> {
@@ -497,4 +520,5 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     runInTx(responder, store -> ref.set(function.apply(store)));
     return ref.get();
   }
+
 }
