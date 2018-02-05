@@ -75,6 +75,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -161,7 +162,8 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                               final @QueryParam("srcPath") @DefaultValue("") String srcPath) {
     runInTx(responder, store -> {
       validate(offset, limit);
-      responder.sendString(GSON.toJson(store.listExperiments(offset, limit, e -> e.getSrcpath().equals(srcPath))));
+      Predicate<Experiment> predicate = srcPath.isEmpty() ? null : e -> e.getSrcpath().equals(srcPath);
+      responder.sendString(GSON.toJson(store.listExperiments(offset, limit, predicate)));
     });
   }
 
