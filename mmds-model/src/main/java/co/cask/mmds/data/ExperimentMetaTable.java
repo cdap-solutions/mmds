@@ -6,11 +6,13 @@ import co.cask.cdap.api.dataset.DatasetProperties;
 import co.cask.cdap.api.dataset.lib.IndexedTable;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
-import co.cask.cdap.api.dataset.table.Scan;
 import co.cask.cdap.api.dataset.table.Scanner;
 import co.cask.cdap.api.dataset.table.Table;
+import com.google.common.base.Joiner;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -20,7 +22,7 @@ import javax.annotation.Nullable;
  * serialization, deserialization, etc. This is not a custom dataset because custom datasets cannot currently
  * be used in plugins.
  */
-public class ExperimentMetaTable extends CountTable {
+public class ExperimentMetaTable extends CountTable<IndexedTable> {
   private final static String NAME_COL = "name";
   private final static String DESC_COL = "description";
   private final static String SRCPATH_COL = "srcpath";
@@ -39,12 +41,12 @@ public class ExperimentMetaTable extends CountTable {
     Schema.Field.of(TOTALS_COL, Schema.nullableOf(Schema.of(Schema.Type.LONG)))
   );
   public static final DatasetProperties DATASET_PROPERTIES = DatasetProperties.builder()
-    .add(IndexedTable.INDEX_COLUMNS_CONF_KEY, SRCPATH_COL)
+    .add(IndexedTable.INDEX_COLUMNS_CONF_KEY, Joiner.on(",").join(NAME_COL, SRCPATH_COL))
     .add(Table.PROPERTY_SCHEMA, SCHEMA.toString())
     .add(Table.PROPERTY_SCHEMA_ROW_FIELD, NAME_COL)
     .build();
 
-  public ExperimentMetaTable(Table table) {
+  public ExperimentMetaTable(IndexedTable table) {
     super(table);
   }
 
@@ -57,7 +59,7 @@ public class ExperimentMetaTable extends CountTable {
    * @return all experiments starting from offset
    */
   public ExperimentsMeta list(int offset, int limit) {
-    return list(offset, limit, null);
+    return list(offset, limit, null, new SortInfo(SortType.ASC));
   }
 
   /**
@@ -66,16 +68,26 @@ public class ExperimentMetaTable extends CountTable {
    * @param offset the number of initial experiments to ignore and not add to the results
    * @param limit upper limit on number of results returned.
    * @param predicate predicate to filter experiments
+   * @param sortInfo sort information about sort order and field
    *
    * @return all experiments starting from offset with given source path
    */
-  public ExperimentsMeta list(int offset, int limit, Predicate<Experiment> predicate) {
-    Scan scan = new Scan(new byte[] { 0, 0 }, null);
+  public ExperimentsMeta list(int offset, int limit, Predicate<Experiment> predicate, SortInfo sortInfo) {
     int count = 0;
     int cursor = 0;
+    SortType sortType = sortInfo.getSortType();
+
+    if (sortType.equals(SortType.DESC)) {
+      offset = (int) (getTotalCount() - offset - limit);
+
+      if (offset < 0) {
+        limit = limit - Math.abs(offset);
+        offset = 0;
+      }
+    }
 
     List<Experiment> experiments = new ArrayList<>();
-    try (Scanner scanner = table.scan(scan)) {
+    try (Scanner scanner = table.scanByIndex(Bytes.toBytes(sortInfo.getFields().get(0)), new byte[] { 0, 0 }, null)) {
       Row row;
 
       while ((row = scanner.next()) != null) {
@@ -95,6 +107,15 @@ public class ExperimentMetaTable extends CountTable {
           count++;
         }
       }
+    }
+
+    if (sortType.equals(SortType.DESC)) {
+      Collections.sort(experiments, new Comparator<Experiment>() {
+        @Override
+        public int compare(Experiment o1, Experiment o2) {
+          return o2.getName().compareTo(o1.getName());
+        }
+      });
     }
 
     return new ExperimentsMeta(getTotalCount(), experiments);

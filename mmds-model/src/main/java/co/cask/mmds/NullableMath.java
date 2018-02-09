@@ -1,6 +1,5 @@
 package co.cask.mmds;
 
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 
 /**
