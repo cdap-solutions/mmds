@@ -1,4 +1,4 @@
-package co.cask.mmds.modeler.param.spec;
+package co.cask.mmds.spec;
 
 import java.util.Collections;
 import java.util.HashSet;

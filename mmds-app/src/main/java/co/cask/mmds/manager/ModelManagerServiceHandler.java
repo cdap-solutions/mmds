@@ -42,12 +42,11 @@ import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SplitKey;
-import co.cask.mmds.manager.splitter.DataSplitResult;
-import co.cask.mmds.manager.splitter.DataSplitStatsGenerator;
-import co.cask.mmds.manager.splitter.DatasetSplitter;
-import co.cask.mmds.manager.splitter.RandomDatasetSplitter;
+import co.cask.mmds.splitter.DataSplitResult;
+import co.cask.mmds.splitter.DatasetSplitter;
+import co.cask.mmds.splitter.SplitterSpec;
+import co.cask.mmds.splitter.Splitters;
 import co.cask.mmds.modeler.Modelers;
-import co.cask.mmds.modeler.param.spec.ParamSpec;
 import co.cask.mmds.modeler.train.ModelOutput;
 import co.cask.mmds.modeler.train.ModelOutputWriter;
 import co.cask.mmds.modeler.train.ModelTrainer;
@@ -55,6 +54,7 @@ import co.cask.mmds.proto.BadRequestException;
 import co.cask.mmds.proto.CreateModelRequest;
 import co.cask.mmds.proto.EndpointException;
 import co.cask.mmds.proto.TrainModelRequest;
+import co.cask.mmds.spec.ParamSpec;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
@@ -122,6 +122,28 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Override
   public void destroy() {
     // no-op
+  }
+
+  @GET
+  @Path("/splitters")
+  public void listSplitters(HttpServiceRequest request, HttpServiceResponder responder) {
+    List<SplitterSpec> splitters = new ArrayList<>();
+    for (DatasetSplitter splitter : Splitters.getSplitters()) {
+      splitters.add(splitter.getSpec());
+    }
+    responder.sendString(GSON.toJson(splitters));
+  }
+
+  @GET
+  @Path("/splitters/{splitter}")
+  public void getSplitter(HttpServiceRequest request, HttpServiceResponder responder,
+                          @PathParam("splitter") String splitterType) {
+    DatasetSplitter splitter = Splitters.getSplitter(splitterType);
+    if (splitter == null) {
+      responder.sendError(404, "Splitter " + splitterType + " not found.");
+      return;
+    }
+    responder.sendString(GSON.toJson(splitter.getSpec()));
   }
 
   @GET
@@ -415,7 +437,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     SplitKey splitKey = new SplitKey(experimentName, splitId);
     new Thread(() -> {
       SplitLogging.start(experimentName, splitId);
-      DatasetSplitter datasetSplitter = new RandomDatasetSplitter(20d);
+      DatasetSplitter datasetSplitter = Splitters.getSplitter(dataSplitInfo.getDataSplit().getType());
       try (DataSplitStatsGenerator splitStatsGenerator =
              new DataSplitStatsGenerator(sparkSession, datasetSplitter,
                                          context.getPluginContext(), context.getServiceDiscoverer())) {

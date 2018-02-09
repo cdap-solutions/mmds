@@ -1,4 +1,4 @@
-package co.cask.mmds.modeler.param.spec;
+package co.cask.mmds.spec;
 
 /**
  * A range of numbers.

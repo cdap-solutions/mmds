@@ -1,4 +1,4 @@
-package co.cask.mmds.manager.splitter;
+package co.cask.mmds.splitter;
 
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.sql.Row;

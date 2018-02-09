@@ -1,4 +1,4 @@
-package co.cask.mmds.manager.splitter;
+package co.cask.mmds.manager;
 
 import co.cask.cdap.api.ServiceDiscoverer;
 import co.cask.cdap.api.data.schema.Schema;
@@ -10,6 +10,11 @@ import co.cask.cdap.etl.api.Transform;
 import co.cask.mmds.NullableMath;
 import co.cask.mmds.data.ColumnSplitStats;
 import co.cask.mmds.data.DataSplitInfo;
+import co.cask.mmds.splitter.DataSplitResult;
+import co.cask.mmds.splitter.DatasetSplitter;
+import co.cask.mmds.splitter.ToCatHisto;
+import co.cask.mmds.splitter.ToDoubleValues;
+import co.cask.mmds.splitter.ToNumericHisto;
 import co.cask.mmds.stats.CategoricalHisto;
 import co.cask.mmds.stats.NumericHisto;
 import co.cask.mmds.stats.NumericStats;
@@ -86,7 +91,7 @@ public class DataSplitStatsGenerator implements AutoCloseable {
 
     long start = TimeUnit.SECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 
-    Dataset<Row>[] split = splitter.split(rawData);
+    Dataset<Row>[] split = splitter.split(rawData, dataSplitInfo.getDataSplit().getParams());
     Dataset<Row> trainingSplit = split[0].cache();
     Dataset<Row> testSplit = split[1].cache();
 

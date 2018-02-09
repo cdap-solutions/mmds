@@ -1,8 +1,8 @@
 package co.cask.mmds.modeler.param;
 
-import co.cask.mmds.modeler.param.spec.ParamSpec;
-import co.cask.mmds.modeler.param.spec.Params;
-import co.cask.mmds.modeler.param.spec.StringParam;
+import co.cask.mmds.spec.ParamSpec;
+import co.cask.mmds.spec.Params;
+import co.cask.mmds.spec.StringParam;
 import com.google.common.collect.ImmutableSet;
 import org.apache.spark.ml.regression.GBTRegressor;
 

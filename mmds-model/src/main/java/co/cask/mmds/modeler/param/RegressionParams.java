@@ -1,11 +1,12 @@
 package co.cask.mmds.modeler.param;
 
-import co.cask.mmds.modeler.param.spec.BoolParam;
-import co.cask.mmds.modeler.param.spec.DoubleParam;
-import co.cask.mmds.modeler.param.spec.IntParam;
-import co.cask.mmds.modeler.param.spec.ParamSpec;
-import co.cask.mmds.modeler.param.spec.Params;
-import co.cask.mmds.modeler.param.spec.Range;
+import co.cask.mmds.spec.BoolParam;
+import co.cask.mmds.spec.DoubleParam;
+import co.cask.mmds.spec.IntParam;
+import co.cask.mmds.spec.ParamSpec;
+import co.cask.mmds.spec.Parameters;
+import co.cask.mmds.spec.Params;
+import co.cask.mmds.spec.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +16,7 @@ import java.util.Map;
 /**
  * Common modeler parameters for regression based algorithms.
  */
-public abstract class RegressionParams implements ModelerParams {
+public abstract class RegressionParams implements Parameters {
   protected final IntParam maxIterations;
   protected final BoolParam standardization;
   protected final DoubleParam regularizationParam;
@@ -50,7 +51,7 @@ public abstract class RegressionParams implements ModelerParams {
 
   @Override
   public Map<String, String> toMap() {
-    return Params.putParams(new HashMap<String, String>(), maxIterations, standardization, regularizationParam,
+    return Params.putParams(new HashMap<>(), maxIterations, standardization, regularizationParam,
                             elasticNetParam, tolerance);
   }
 }

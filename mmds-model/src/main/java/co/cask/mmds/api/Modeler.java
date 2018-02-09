@@ -1,7 +1,7 @@
 package co.cask.mmds.api;
 
 import co.cask.mmds.modeler.Algorithm;
-import co.cask.mmds.modeler.param.ModelerParams;
+import co.cask.mmds.spec.Parameters;
 import org.apache.spark.ml.PredictionModel;
 import org.apache.spark.ml.Predictor;
 import org.apache.spark.ml.linalg.Vector;
@@ -26,7 +26,7 @@ public interface Modeler<P extends Predictor<Vector, P, M>, M extends Prediction
    * @return updated parameters
    * @throws IllegalArgumentException if the map contains invalid parameters
    */
-  ModelerParams getParams(Map<String, String> params);
+  Parameters getParams(Map<String, String> params);
 
   /**
    * Create the predictor used to train a model and make predictions.
