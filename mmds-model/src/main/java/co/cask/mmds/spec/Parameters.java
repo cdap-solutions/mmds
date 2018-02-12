@@ -1,14 +1,14 @@
-package co.cask.mmds.modeler.param;
+package co.cask.mmds.spec;
 
-import co.cask.mmds.modeler.param.spec.ParamSpec;
+import co.cask.mmds.spec.ParamSpec;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * Modeler parameters with some utility methods for getting and validating parameters.
+ * Parameters for modeling or splitting.
  */
-public interface ModelerParams {
+public interface Parameters {
 
   /**
    * @return model parameters as a string map

@@ -3,7 +3,7 @@ package co.cask.mmds.modeler.param;
 import java.util.Map;
 
 /**
- * Params for random forest regression.
+ * Parameters for random forest regression.
  */
 public class RandomForestRegressionParams extends RandomForestParams {
 

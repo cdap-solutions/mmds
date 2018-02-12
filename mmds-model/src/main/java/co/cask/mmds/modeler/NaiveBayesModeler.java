@@ -2,7 +2,6 @@ package co.cask.mmds.modeler;
 
 import co.cask.mmds.api.AlgorithmType;
 import co.cask.mmds.api.Modeler;
-import co.cask.mmds.modeler.param.ModelerParams;
 import co.cask.mmds.modeler.param.NaiveBayesParams;
 import org.apache.spark.ml.Predictor;
 import org.apache.spark.ml.classification.NaiveBayes;

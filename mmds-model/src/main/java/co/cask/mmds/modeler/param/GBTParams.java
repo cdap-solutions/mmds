@@ -1,10 +1,10 @@
 package co.cask.mmds.modeler.param;
 
-import co.cask.mmds.modeler.param.spec.DoubleParam;
-import co.cask.mmds.modeler.param.spec.IntParam;
-import co.cask.mmds.modeler.param.spec.ParamSpec;
-import co.cask.mmds.modeler.param.spec.Params;
-import co.cask.mmds.modeler.param.spec.Range;
+import co.cask.mmds.spec.DoubleParam;
+import co.cask.mmds.spec.IntParam;
+import co.cask.mmds.spec.ParamSpec;
+import co.cask.mmds.spec.Params;
+import co.cask.mmds.spec.Range;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package co.cask.mmds.manager.splitter;
+package co.cask.mmds.splitter;
 
 import co.cask.mmds.data.ColumnSplitStats;
 

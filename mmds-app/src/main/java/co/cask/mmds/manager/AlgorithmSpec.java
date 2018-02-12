@@ -2,7 +2,7 @@ package co.cask.mmds.manager;
 
 import co.cask.mmds.api.AlgorithmType;
 import co.cask.mmds.modeler.Algorithm;
-import co.cask.mmds.modeler.param.spec.ParamSpec;
+import co.cask.mmds.spec.ParamSpec;
 
 import java.util.List;
 

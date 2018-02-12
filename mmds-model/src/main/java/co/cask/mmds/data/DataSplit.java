@@ -1,6 +1,8 @@
 package co.cask.mmds.data;
 
 import co.cask.cdap.api.data.schema.Schema;
+import co.cask.mmds.splitter.DatasetSplitter;
+import co.cask.mmds.splitter.Splitters;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,6 +84,11 @@ public class DataSplit {
     if (schema == null) {
       throw new IllegalArgumentException("A schema must be specified.");
     }
+    DatasetSplitter splitter = Splitters.getSplitter(type);
+    if (splitter == null) {
+      throw new IllegalArgumentException("No splitter of type " + type + " exists.");
+    }
+    splitter.getParams(getParams());
   }
 
   /**

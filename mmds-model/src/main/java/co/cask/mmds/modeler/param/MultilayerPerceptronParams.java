@@ -1,12 +1,12 @@
 package co.cask.mmds.modeler.param;
 
-import co.cask.mmds.modeler.param.spec.DoubleParam;
-import co.cask.mmds.modeler.param.spec.IntArrayParam;
-import co.cask.mmds.modeler.param.spec.IntParam;
-import co.cask.mmds.modeler.param.spec.ParamSpec;
-import co.cask.mmds.modeler.param.spec.Params;
-import co.cask.mmds.modeler.param.spec.Range;
-import co.cask.mmds.modeler.param.spec.StringParam;
+import co.cask.mmds.spec.DoubleParam;
+import co.cask.mmds.spec.IntArrayParam;
+import co.cask.mmds.spec.IntParam;
+import co.cask.mmds.spec.ParamSpec;
+import co.cask.mmds.spec.Parameters;
+import co.cask.mmds.spec.Range;
+import co.cask.mmds.spec.StringParam;
 import com.google.common.collect.ImmutableSet;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier;
 
@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Modeler parameters for Multilayer Perceptron.
  */
-public class MultilayerPerceptronParams implements ModelerParams {
+public class MultilayerPerceptronParams implements Parameters {
   private final IntParam blockSize;
   private final IntParam maxIterations;
   private final DoubleParam tolerance;
@@ -68,11 +68,11 @@ public class MultilayerPerceptronParams implements ModelerParams {
 
   @Override
   public Map<String, String> toMap() {
-    return Params.putParams(new HashMap<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
+    return co.cask.mmds.spec.Params.putParams(new HashMap<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
   }
 
   @Override
   public List<ParamSpec> getSpec() {
-    return Params.addParams(new ArrayList<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
+    return co.cask.mmds.spec.Params.addParams(new ArrayList<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
   }
 }

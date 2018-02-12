@@ -1,4 +1,4 @@
-package co.cask.mmds.manager.splitter;
+package co.cask.mmds.manager;
 
 
 import co.cask.cdap.api.ServiceDiscoverer;

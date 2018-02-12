@@ -3,7 +3,7 @@ package co.cask.mmds.data;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.mmds.api.Modeler;
 import co.cask.mmds.modeler.Modelers;
-import co.cask.mmds.modeler.param.ModelerParams;
+import co.cask.mmds.spec.Parameters;
 import co.cask.mmds.proto.BadRequestException;
 import co.cask.mmds.proto.ConflictException;
 import co.cask.mmds.proto.CreateModelRequest;
@@ -216,11 +216,11 @@ public class ExperimentStore {
     }
 
     Modeler modeler = Modelers.getModeler(trainRequest.getAlgorithm());
-    ModelerParams params = modeler.getParams(trainRequest.getHyperparameters());
-    // update params with the modeler defaults.
+    Parameters parameters = modeler.getParams(trainRequest.getHyperparameters());
+    // update parameters with the modeler defaults.
     TrainModelRequest requestWithDefaults = new TrainModelRequest(trainRequest.getAlgorithm(),
                                                                   trainRequest.getPredictionsDataset(),
-                                                                  params.toMap());
+                                                                  parameters.toMap());
 
     models.setTrainingInfo(key, requestWithDefaults);
 

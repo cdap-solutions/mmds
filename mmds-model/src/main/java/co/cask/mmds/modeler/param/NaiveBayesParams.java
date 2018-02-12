@@ -1,10 +1,10 @@
 package co.cask.mmds.modeler.param;
 
-import co.cask.mmds.modeler.param.spec.DoubleParam;
-import co.cask.mmds.modeler.param.spec.ParamSpec;
-import co.cask.mmds.modeler.param.spec.Params;
-import co.cask.mmds.modeler.param.spec.Range;
-import co.cask.mmds.modeler.param.spec.StringParam;
+import co.cask.mmds.spec.DoubleParam;
+import co.cask.mmds.spec.ParamSpec;
+import co.cask.mmds.spec.Parameters;
+import co.cask.mmds.spec.Range;
+import co.cask.mmds.spec.StringParam;
 import com.google.common.collect.ImmutableSet;
 import org.apache.spark.ml.classification.NaiveBayes;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Modeler parameters for Naive Bayes.
  */
-public class NaiveBayesParams implements ModelerParams {
+public class NaiveBayesParams implements Parameters {
   private final DoubleParam smoothing;
   private final StringParam type;
 
@@ -33,11 +33,11 @@ public class NaiveBayesParams implements ModelerParams {
 
   @Override
   public Map<String, String> toMap() {
-    return Params.putParams(new HashMap<String, String>(), smoothing, type);
+    return co.cask.mmds.spec.Params.putParams(new HashMap<String, String>(), smoothing, type);
   }
 
   @Override
   public List<ParamSpec> getSpec() {
-    return Params.addParams(new ArrayList<ParamSpec>(), smoothing, type);
+    return co.cask.mmds.spec.Params.addParams(new ArrayList<ParamSpec>(), smoothing, type);
   }
 }
