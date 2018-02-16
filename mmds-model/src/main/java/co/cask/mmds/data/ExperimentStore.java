@@ -367,6 +367,9 @@ public class ExperimentStore {
       throw new IllegalStateException("Cannot transition split to failed state unless it is in the splitting state.");
     }
     splits.setStatus(key, SplitStatus.FAILED);
+    for (String model : splitStats.getModels()) {
+      models.setStatus(new ModelKey(key.getExperiment(), model), ModelStatus.SPLIT_FAILED);
+    }
   }
 
   public void deleteSplit(SplitKey key) {
