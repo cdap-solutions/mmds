@@ -145,17 +145,15 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(model2Meta, modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
 
     long trainTs = System.currentTimeMillis();
-    List<String> features = ImmutableList.of("f1", "f2");
     Set<String> categoricalFeatures = ImmutableSet.of("f1");
     EvaluationMetrics evaluationMetrics = new EvaluationMetrics(.9d, .8d, .1d);
     modelTable.update(new ModelKey(experiment1.getName(), model1Id), evaluationMetrics,
-                      trainTs, features, categoricalFeatures);
+                      trainTs, categoricalFeatures);
     model1Meta = ModelMeta.builder(model1Id)
       .setDescription("desc1")
       .setName("model1")
       .setCreateTime(createTs)
       .setTrainedTime(trainTs)
-      .setFeatures(features)
       .setCategoricalFeatures(categoricalFeatures)
       .setEvaluationMetrics(evaluationMetrics)
       .setDeployTime(-1L)
@@ -210,7 +208,7 @@ public class StoreTest extends TestBaseWithSpark2 {
       .setDirectives(ImmutableList.of("d3"))
       .setParams(ImmutableMap.of("p2", "v2"))
       .setSchema(Schema.recordOf("s1", Schema.Field.of("f1", Schema.of(Schema.Type.STRING))))
-      .setType("firstN")
+      .setType("random")
       .build();
     String split2Id = splitTable.addSplit(experiment2, split2);
     SplitKey split2Key = new SplitKey(experiment2, split2Id);

@@ -1,6 +1,7 @@
 package co.cask.mmds.data;
 
 import co.cask.cdap.api.common.Bytes;
+import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
 import co.cask.cdap.api.dataset.table.Scan;
@@ -204,7 +205,7 @@ public class ModelTable extends CountTable {
     return id;
   }
 
-  public void setSplit(ModelKey key, DataSplitStats split) {
+  public void setSplit(ModelKey key, DataSplitStats split, String outcome) {
     ModelStatus status;
     switch (split.getStatus()) {
       case SPLITTING:
@@ -220,9 +221,18 @@ public class ModelTable extends CountTable {
         // should never happen
         throw new IllegalStateException("Unknown split status " + split.getStatus());
     }
+    Schema splitSchema = split.getSchema();
+    List<String> featureNames = new ArrayList<>(splitSchema.getFields().size() - 1);
+    for (Schema.Field field : splitSchema.getFields()) {
+      String fieldName = field.getName();
+      if (!fieldName.equals(outcome)) {
+        featureNames.add(fieldName);
+      }
+    }
     Put put = new Put(getKey(key))
       .add(SPLIT_COL, split.getId())
-      .add(STATUS_COL, status.name());
+      .add(STATUS_COL, status.name())
+      .add(FEATURES_COL, GSON.toJson(featureNames));
     table.put(put);
   }
 
@@ -241,7 +251,7 @@ public class ModelTable extends CountTable {
    * @param evaluationMetrics the model evaluation metrics
    */
   public void update(ModelKey key, EvaluationMetrics evaluationMetrics,
-                     long trainedTime, List<String> features, Set<String> categoricalFeatures) {
+                     long trainedTime, Set<String> categoricalFeatures) {
     Put put = new Put(getKey(key));
     if (evaluationMetrics.getPrecision() != null) {
       put.add(PRECISION_COL, evaluationMetrics.getPrecision());
@@ -266,7 +276,6 @@ public class ModelTable extends CountTable {
     }
     put.add(STATUS_COL, ModelStatus.TRAINED.name());
     put.add(TRAIN_TIME_COL, trainedTime);
-    put.add(FEATURES_COL, GSON.toJson(features));
     put.add(CATEGORICAL_FEATURES_COL, GSON.toJson(categoricalFeatures));
     table.put(put);
   }
