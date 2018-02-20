@@ -4,6 +4,7 @@ import co.cask.mmds.NullableMath;
 import co.cask.mmds.stats.CategoricalHisto;
 import co.cask.mmds.stats.NumericBin;
 import co.cask.mmds.stats.NumericHisto;
+import com.google.common.collect.Sets;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -96,7 +97,8 @@ public class ColumnSplitStats {
          new SplitCountVal(train.getTotalCount(), test.getTotalCount()),
          new SplitCountVal(train.getNullCount(), test.getNullCount()),
          new SplitCountVal(train.getEmptyCount(), test.getEmptyCount()),
-         new SplitCountVal((long) train.getCounts().size(), (long) test.getCounts().size()),
+         new SplitVal<>((long) train.getCounts().size(), (long) test.getCounts().size(),
+                        (long) Sets.union(train.getCounts().keySet(), test.getCounts().keySet()).size()),
          null, null, null, null, null, null, null,
          convert(train, test));
   }
