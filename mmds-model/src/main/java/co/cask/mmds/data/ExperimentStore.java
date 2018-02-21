@@ -237,7 +237,7 @@ public class ExperimentStore {
   }
 
   public void setModelSplit(ModelKey key, String splitId) {
-    getExperiment(key.getExperiment());
+    Experiment experiment = getExperiment(key.getExperiment());
     ModelMeta meta = getModel(key);
     ModelStatus currentStatus = meta.getStatus();
 
@@ -256,7 +256,7 @@ public class ExperimentStore {
       splits.unregisterModel(new SplitKey(key.getExperiment(), currentSplit), key.getModel());
     }
 
-    models.setSplit(key, splitInfo);
+    models.setSplit(key, splitInfo, experiment.getOutcome());
     splits.registerModel(new SplitKey(key.getExperiment(), splitId), key.getModel());
   }
 
@@ -266,8 +266,8 @@ public class ExperimentStore {
   }
 
   public void updateModelMetrics(ModelKey key, EvaluationMetrics evaluationMetrics,
-                                 long trainedTime, List<String> features, Set<String> categoricalFeatures) {
-    models.update(key, evaluationMetrics, trainedTime, features, categoricalFeatures);
+                                 long trainedTime, Set<String> categoricalFeatures) {
+    models.update(key, evaluationMetrics, trainedTime, categoricalFeatures);
   }
 
   public void deleteModel(ModelKey modelKey) {

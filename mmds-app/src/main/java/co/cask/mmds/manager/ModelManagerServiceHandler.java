@@ -42,10 +42,6 @@ import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SplitKey;
-import co.cask.mmds.splitter.DataSplitResult;
-import co.cask.mmds.splitter.DatasetSplitter;
-import co.cask.mmds.splitter.SplitterSpec;
-import co.cask.mmds.splitter.Splitters;
 import co.cask.mmds.modeler.Modelers;
 import co.cask.mmds.modeler.train.ModelOutput;
 import co.cask.mmds.modeler.train.ModelOutputWriter;
@@ -55,6 +51,10 @@ import co.cask.mmds.proto.CreateModelRequest;
 import co.cask.mmds.proto.EndpointException;
 import co.cask.mmds.proto.TrainModelRequest;
 import co.cask.mmds.spec.ParamSpec;
+import co.cask.mmds.splitter.DataSplitResult;
+import co.cask.mmds.splitter.DatasetSplitter;
+import co.cask.mmds.splitter.SplitterSpec;
+import co.cask.mmds.splitter.Splitters;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
@@ -354,8 +354,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
 
         // write model metadata
         runInTx(store -> store.updateModelMetrics(modelKey, modelOutput.getEvaluationMetrics(),
-                                                  System.currentTimeMillis(), modelOutput.getFeatureNames(),
-                                                  modelOutput.getCategoricalFeatures()));
+                                                  System.currentTimeMillis(), modelOutput.getCategoricalFeatures()));
       } catch (Throwable e) {
         LOG.error("Error training model {} in experiment {}.", modelKey.getModel(), modelKey.getExperiment(), e);
         try {
