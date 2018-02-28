@@ -19,8 +19,8 @@ package co.cask.mmds.manager;
 import co.cask.cdap.api.common.Bytes;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.dataset.lib.FileSet;
+import co.cask.cdap.api.dataset.lib.IndexedTable;
 import co.cask.cdap.api.dataset.lib.PartitionedFileSet;
-import co.cask.cdap.api.dataset.table.Table;
 import co.cask.cdap.api.service.http.HttpServiceRequest;
 import co.cask.cdap.api.service.http.HttpServiceResponder;
 import co.cask.cdap.api.spark.service.SparkHttpServiceContext;
@@ -41,6 +41,8 @@ import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
+import co.cask.mmds.data.SortInfo;
+import co.cask.mmds.data.SortType;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.modeler.Modelers;
 import co.cask.mmds.modeler.train.ModelOutput;
@@ -181,11 +183,13 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   public void listExperiments(HttpServiceRequest request, HttpServiceResponder responder,
                               final @QueryParam("offset") @DefaultValue("0") int offset,
                               final @QueryParam("limit") @DefaultValue("20") int limit,
-                              final @QueryParam("srcPath") @DefaultValue("") String srcPath) {
+                              final @QueryParam("srcPath") @DefaultValue("") String srcPath,
+                              final @QueryParam("sort") @DefaultValue("name asc") String sort) {
     runInTx(responder, store -> {
       validate(offset, limit);
       Predicate<Experiment> predicate = srcPath.isEmpty() ? null : e -> e.getSrcpath().equals(srcPath);
-      responder.sendString(GSON.toJson(store.listExperiments(offset, limit, predicate)));
+      SortInfo sortInfo = SortInfo.parse(sort);
+      responder.sendString(GSON.toJson(store.listExperiments(offset, limit, predicate, sortInfo)));
     });
   }
 
@@ -497,8 +501,8 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
    */
   private void runInTx(final Consumer<ExperimentStore> consumer) throws TransactionFailureException {
     context.execute((datasetContext) -> {
-      Table modelMeta = datasetContext.getDataset(modelMetaDataset);
-      Table experiments = datasetContext.getDataset(experimentMetaDataset);
+      IndexedTable modelMeta = datasetContext.getDataset(modelMetaDataset);
+      IndexedTable experiments = datasetContext.getDataset(experimentMetaDataset);
       PartitionedFileSet splits = datasetContext.getDataset(splitsDataset);
       ExperimentStore store = new ExperimentStore(
         new ExperimentMetaTable(experiments),
@@ -515,8 +519,8 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   private void runInTx(final HttpServiceResponder responder, final Consumer<ExperimentStore> consumer) {
     try {
       context.execute((datasetContext) -> {
-          Table modelMeta = datasetContext.getDataset(modelMetaDataset);
-          Table experiments = datasetContext.getDataset(experimentMetaDataset);
+        IndexedTable modelMeta = datasetContext.getDataset(modelMetaDataset);
+        IndexedTable experiments = datasetContext.getDataset(experimentMetaDataset);
           PartitionedFileSet splits = datasetContext.getDataset(splitsDataset);
           ExperimentStore store = new ExperimentStore(
             new ExperimentMetaTable(experiments),

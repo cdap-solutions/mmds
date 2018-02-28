@@ -17,8 +17,8 @@
 package co.cask.mmds;
 
 import co.cask.cdap.api.data.schema.Schema;
+import co.cask.cdap.api.dataset.lib.IndexedTable;
 import co.cask.cdap.api.dataset.lib.PartitionedFileSet;
-import co.cask.cdap.api.dataset.table.Table;
 import co.cask.cdap.test.DataSetManager;
 import co.cask.cdap.test.TestBaseWithSpark2;
 import co.cask.cdap.test.TestConfiguration;
@@ -32,6 +32,8 @@ import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelStatus;
 import co.cask.mmds.data.ModelTable;
+import co.cask.mmds.data.SortInfo;
+import co.cask.mmds.data.SortType;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.data.SplitStatus;
 import co.cask.mmds.manager.ModelPrepApp;
@@ -62,7 +64,7 @@ public class StoreTest extends TestBaseWithSpark2 {
 
   @Test
   public void testExperimentsTable() throws Exception {
-    DataSetManager<Table> manager = getDataset(Constants.Dataset.EXPERIMENTS_META);
+    DataSetManager<IndexedTable> manager = getDataset(Constants.Dataset.EXPERIMENTS_META);
     ExperimentMetaTable experimentsTable = new ExperimentMetaTable(manager.get());
 
     Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
@@ -88,7 +90,7 @@ public class StoreTest extends TestBaseWithSpark2 {
     list = experimentsTable.list(1, 1).getExperiments();
     Assert.assertEquals(ImmutableList.of(experiment2), list);
 
-    list = experimentsTable.list(0, 1, e -> e.getSrcpath().equals("src") ).getExperiments();
+    list = experimentsTable.list(0, 1, e -> e.getSrcpath().equals("src"), new SortInfo(SortType.ASC)).getExperiments();
     Assert.assertEquals(ImmutableList.of(experiment1), list);
 
     experimentsTable.delete(experiment2Name);
@@ -106,7 +108,7 @@ public class StoreTest extends TestBaseWithSpark2 {
 
   @Test
   public void testModelsTable() throws Exception {
-    DataSetManager<Table> manager = getDataset(Constants.Dataset.MODEL_META);
+    DataSetManager<IndexedTable> manager = getDataset(Constants.Dataset.MODEL_META);
     ModelTable modelTable = new ModelTable(manager.get());
 
     Experiment experiment1 = new Experiment("e1", "", "path", "o1", "string", "workspace");
@@ -236,5 +238,70 @@ public class StoreTest extends TestBaseWithSpark2 {
     manager.flush();
     Assert.assertTrue(splitTable.list(experiment2).isEmpty());
     Assert.assertNull(splitTable.get(split2Key));
+  }
+
+  @Test
+  public void testExperimentsSorting() throws Exception {
+    DataSetManager<IndexedTable> manager = getDataset(Constants.Dataset.EXPERIMENTS_META);
+    ExperimentMetaTable experimentsTable = new ExperimentMetaTable(manager.get());
+
+    Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
+
+    String experiment1Name = "abc123";
+    Assert.assertNull(experimentsTable.get(experiment1Name));
+
+    Experiment experiment1 = new Experiment(experiment1Name, "desc", "src", "outcome", "string", "work1");
+    experimentsTable.put(experiment1);
+
+    String experiment2Name = "abd345";
+    Experiment experiment2 = new Experiment(experiment2Name, "d", "s", "o", "string", "work2");
+    experimentsTable.put(experiment2);
+
+    String experiment3Name = "bda345";
+    Experiment experiment3 = new Experiment(experiment3Name, "d", "s", "o", "string", "work2");
+    experimentsTable.put(experiment3);
+
+    String experiment4Name = "zsd345";
+    Experiment experiment4 = new Experiment(experiment4Name, "d", "s", "o", "string", "work2");
+    experimentsTable.put(experiment4);
+
+    String experiment5Name = "yea345";
+    Experiment experiment5 = new Experiment(experiment5Name, "d", "s", "o", "string", "work2");
+    experimentsTable.put(experiment5);
+
+    Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 5L);
+
+    List<Experiment> list = experimentsTable.list(0, 20).getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment1, experiment2, experiment3, experiment5, experiment4), list);
+
+    list = experimentsTable.list(0, 20, null, new SortInfo(SortType.DESC)).getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment4, experiment5, experiment3, experiment2, experiment1), list);
+
+    list = experimentsTable.list(0, 2, null, new SortInfo(SortType.DESC)).getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment4, experiment5), list);
+
+    list = experimentsTable.list(2, 2, null, new SortInfo(SortType.DESC)).getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment3, experiment2), list);
+
+    list = experimentsTable.list(4, 2, null, new SortInfo(SortType.DESC)).getExperiments();
+    Assert.assertEquals(ImmutableList.of(experiment1), list);
+
+    experimentsTable.delete(experiment5Name);
+    manager.flush();
+
+    experimentsTable.delete(experiment4Name);
+    manager.flush();
+
+    experimentsTable.delete(experiment3Name);
+    manager.flush();
+
+    experimentsTable.delete(experiment2Name);
+    manager.flush();
+
+    experimentsTable.delete(experiment1Name);
+    manager.flush();
+
+    Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
+    Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 0L);
   }
 }

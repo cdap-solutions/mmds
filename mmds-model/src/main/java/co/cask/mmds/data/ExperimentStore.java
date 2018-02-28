@@ -42,12 +42,12 @@ public class ExperimentStore {
     this.models = models;
   }
 
-  public ExperimentsMeta listExperiments(int offset, int limit) {
+  public ExperimentsMeta listExperiments(int offset, int limit, SortInfo sortInfo) {
     return experiments.list(offset, limit);
   }
 
-  public ExperimentsMeta listExperiments(int offset, int limit, Predicate<Experiment> predicate) {
-    return experiments.list(offset, limit, predicate);
+  public ExperimentsMeta listExperiments(int offset, int limit, Predicate<Experiment> predicate, SortInfo sortInfo) {
+    return experiments.list(offset, limit, predicate, sortInfo);
   }
 
   public Experiment getExperiment(String experimentName) {

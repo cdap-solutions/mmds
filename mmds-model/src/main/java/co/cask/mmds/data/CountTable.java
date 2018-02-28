@@ -8,31 +8,44 @@ import co.cask.cdap.api.dataset.table.Table;
 /**
  * Keeps count of total number of rows in a give table
  */
-public class CountTable {
+public class CountTable<T extends Table> {
   protected final static byte[] TOTALS_ROW_KEY = new byte[] { 0 };
   protected final static String TOTALS_COL = "totals";
-  protected final Table table;
+  protected final T table;
 
-  public CountTable(Table table) {
+  public CountTable(T table) {
     this.table = table;
   }
 
   protected long getTotalCount() {
-    byte[] total = table.get(TOTALS_ROW_KEY, Bytes.toBytes(TOTALS_COL));
+    return getTotalCount(TOTALS_COL);
+  }
+
+  protected long getTotalCount(String col) {
+    byte[] total = table.get(TOTALS_ROW_KEY, Bytes.toBytes(col));
     return total == null ? 0 : Bytes.toLong(total);
   }
 
   protected void incrementRowCount() {
+    incrementRowCount(TOTALS_COL);
+  }
+
+  protected void incrementRowCount(String col) {
     // increment row count
-    table.increment(new Increment(TOTALS_ROW_KEY).add(TOTALS_COL, 1L));
+    table.increment(new Increment(TOTALS_ROW_KEY).add(col, 1L));
   }
 
   protected void decrementRowCount(int rowCount) {
-    long totalCount = getTotalCount();
+    decrementRowCount(rowCount, TOTALS_COL);
+  }
+
+  protected void decrementRowCount(int rowCount, String col) {
+    long totalCount = getTotalCount(col);
+
     if (totalCount - rowCount < 0) {
       throw  new IllegalStateException("Cannot decrement row count below 0");
     }
     // decrement row count by rowCount
-    table.put(new Put(TOTALS_ROW_KEY).add(TOTALS_COL,  totalCount - (long) rowCount));
+    table.put(new Put(TOTALS_ROW_KEY).add(col,  totalCount - (long) rowCount));
   }
 }

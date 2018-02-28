@@ -2,11 +2,11 @@ package co.cask.mmds.data;
 
 import co.cask.cdap.api.common.Bytes;
 import co.cask.cdap.api.data.schema.Schema;
+import co.cask.cdap.api.dataset.lib.IndexedTable;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
 import co.cask.cdap.api.dataset.table.Scan;
 import co.cask.cdap.api.dataset.table.Scanner;
-import co.cask.cdap.api.dataset.table.Table;
 import co.cask.mmds.proto.CreateModelRequest;
 import co.cask.mmds.proto.TrainModelRequest;
 import com.google.gson.Gson;
@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  * serialization, deserialization, etc. This is not a custom dataset because custom datasets cannot currently
  * be used in plugins.
  */
-public class ModelTable extends CountTable {
+public class ModelTable extends CountTable<IndexedTable> {
   private static final Gson GSON = new Gson();
   private static Type MAP_TYPE = new TypeToken<Map<String, String>>() { }.getType();
   private static Type LIST_TYPE = new TypeToken<List<String>>() { }.getType();
@@ -58,7 +58,7 @@ public class ModelTable extends CountTable {
   private static final String EVARIANCE_COL = "evariance";
   private static final String MAE_COL = "mae";
 
-  public ModelTable(Table table) {
+  public ModelTable(IndexedTable table) {
     super(table);
   }
 
@@ -95,7 +95,7 @@ public class ModelTable extends CountTable {
       }
     }
 
-    return new ModelsMeta(getTotalCount(), models);
+    return new ModelsMeta(getTotalCount(experiment), models);
   }
 
   /**
@@ -133,7 +133,7 @@ public class ModelTable extends CountTable {
    */
   public void delete(ModelKey key) {
     table.delete(getKey(key));
-    decrementRowCount(1);
+    decrementRowCount(1, key.getExperiment());
   }
 
   /**
@@ -144,7 +144,7 @@ public class ModelTable extends CountTable {
    */
   public int delete(String experiment) {
     int deleted = delete(experiment, Integer.MAX_VALUE);
-    decrementRowCount(deleted);
+    decrementRowCount(deleted, experiment);
     return deleted;
   }
 
@@ -201,7 +201,7 @@ public class ModelTable extends CountTable {
       .add(TRAIN_TIME_COL, -1L)
       .add(DEPLOY_TIME_COL, -1L);
     table.put(put);
-    incrementRowCount();
+    incrementRowCount(experiment.getName());
     return id;
   }
 
