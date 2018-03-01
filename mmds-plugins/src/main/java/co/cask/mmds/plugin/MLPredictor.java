@@ -6,7 +6,7 @@ import co.cask.cdap.api.annotation.Plugin;
 import co.cask.cdap.api.data.format.StructuredRecord;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.dataset.lib.FileSet;
-import co.cask.cdap.api.dataset.table.Table;
+import co.cask.cdap.api.dataset.lib.IndexedTable;
 import co.cask.cdap.api.spark.sql.DataFrames;
 import co.cask.cdap.etl.api.PipelineConfigurer;
 import co.cask.cdap.etl.api.StageConfigurer;
@@ -86,7 +86,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     predictionType = predictionSchema.getType();
 
     // verify that the features used to train the model are present in the input.
-    Table modelTable = context.getDataset(conf.getModelMetaDataset());
+    IndexedTable modelTable = context.getDataset(conf.getModelMetaDataset());
     ModelTable modelMetaTable = new ModelTable(modelTable);
     ModelKey key = new ModelKey(conf.getExperimentID(), conf.getModelID());
     ModelMeta meta = modelMetaTable.get(key);

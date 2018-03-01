@@ -72,6 +72,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -207,7 +208,8 @@ public class PipelineTest extends HydratorTestBase {
       .setDirectives(directives)
       .build();
 
-    CreateModelRequest createModelRequest = new CreateModelRequest("dtree", "decision tree classifier");
+    CreateModelRequest createModelRequest = new CreateModelRequest("dtree", "decision tree classifier",
+                                                                   Collections.emptyList());
     String modelId = createModel(experiment.getName(), createModelRequest);
 
     DataSplitStats splitStats = addSplit(experiment.getName(), dataSplit, 180);
@@ -315,7 +317,8 @@ public class PipelineTest extends HydratorTestBase {
       .setDirectives(directives)
       .build();
 
-    CreateModelRequest createModelRequest = new CreateModelRequest("dtree", "decision tree regression");
+    CreateModelRequest createModelRequest = new CreateModelRequest("dtree", "decision tree regression",
+                                                                   Collections.emptyList());
     String modelId = createModel(experiment.getName(), createModelRequest);
 
     DataSplitStats splitStats = addSplit(experiment.getName(), dataSplit, 180);

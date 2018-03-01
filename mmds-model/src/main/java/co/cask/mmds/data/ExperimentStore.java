@@ -3,7 +3,6 @@ package co.cask.mmds.data;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.mmds.api.Modeler;
 import co.cask.mmds.modeler.Modelers;
-import co.cask.mmds.spec.Parameters;
 import co.cask.mmds.proto.BadRequestException;
 import co.cask.mmds.proto.ConflictException;
 import co.cask.mmds.proto.CreateModelRequest;
@@ -11,6 +10,7 @@ import co.cask.mmds.proto.ExperimentNotFoundException;
 import co.cask.mmds.proto.ModelNotFoundException;
 import co.cask.mmds.proto.SplitNotFoundException;
 import co.cask.mmds.proto.TrainModelRequest;
+import co.cask.mmds.spec.Parameters;
 import co.cask.mmds.stats.CategoricalHisto;
 import co.cask.mmds.stats.NumericHisto;
 import co.cask.mmds.stats.NumericStats;
@@ -241,11 +241,11 @@ public class ExperimentStore {
     ModelMeta meta = getModel(key);
     ModelStatus currentStatus = meta.getStatus();
 
-    if (currentStatus != ModelStatus.EMPTY && currentStatus != ModelStatus.SPLIT_FAILED &&
+    if (currentStatus != ModelStatus.PREPARING && currentStatus != ModelStatus.SPLIT_FAILED &&
       currentStatus != ModelStatus.TRAINING_FAILED && currentStatus != ModelStatus.DATA_READY) {
       throw new ConflictException(String.format(
         "Cannot set a split for a model in the '%s' state. The model must be in the '%s', '%s', '%s', or '%s' state.",
-        currentStatus, ModelStatus.EMPTY, ModelStatus.SPLIT_FAILED,
+        currentStatus, ModelStatus.PREPARING, ModelStatus.SPLIT_FAILED,
         ModelStatus.TRAINING_FAILED, ModelStatus.DATA_READY));
     }
 
@@ -260,9 +260,55 @@ public class ExperimentStore {
     splits.registerModel(new SplitKey(key.getExperiment(), splitId), key.getModel());
   }
 
+  public void unassignModelSplit(ModelKey key) {
+    getExperiment(key.getExperiment());
+    ModelMeta meta = getModel(key);
+    ModelStatus currentStatus = meta.getStatus();
+
+    if (currentStatus != ModelStatus.SPLIT_FAILED && currentStatus != ModelStatus.DATA_READY &&
+      currentStatus != ModelStatus.TRAINING_FAILED) {
+      throw new ConflictException(String.format(
+        "Cannot unassign the split for a model in the '%s' state. The model must be in the '%s', '%s', or '%s' state.",
+        currentStatus, ModelStatus.SPLIT_FAILED, ModelStatus.TRAINING_FAILED, ModelStatus.DATA_READY));
+    }
+
+    DataSplitStats splitInfo = getSplit(new SplitKey(key.getExperiment(), meta.getSplit()));
+
+    models.unassignSplit(key);
+    models.setStatus(key, ModelStatus.PREPARING);
+    SplitKey splitKey = new SplitKey(key.getExperiment(), meta.getSplit());
+    splits.unregisterModel(splitKey, key.getModel());
+    if (splitInfo.getModels().size() == 1) {
+      splits.delete(splitKey);
+    }
+  }
+
   public String addModel(String experimentName, CreateModelRequest createRequest) {
     Experiment experiment = getExperiment(experimentName);
-    return models.add(experiment, createRequest, System.currentTimeMillis());
+    String splitId = createRequest.getSplit();
+    DataSplitStats splitStats = null;
+    if (splitId != null) {
+      SplitKey splitKey = new SplitKey(experimentName, splitId);
+      splitStats = splits.get(splitKey);
+      if (splitStats == null) {
+        throw new SplitNotFoundException(splitKey);
+      }
+    }
+    String modelId = models.add(experiment, createRequest, System.currentTimeMillis());
+    if (splitStats != null) {
+      models.setSplit(new ModelKey(experimentName, modelId), splitStats, experiment.getOutcome());
+    }
+    return modelId;
+  }
+
+  public void setModelDirectives(ModelKey key, List<String> directives) {
+    ModelMeta modelMeta = getModel(key);
+    ModelStatus status = modelMeta.getStatus();
+    if (status != ModelStatus.PREPARING) {
+      throw new ConflictException(String.format(
+        "Directives can only be set or modified if the model is in the %s state.", status));
+    }
+    models.setDirectives(key, directives);
   }
 
   public void updateModelMetrics(ModelKey key, EvaluationMetrics evaluationMetrics,

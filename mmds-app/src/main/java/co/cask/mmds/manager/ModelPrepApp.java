@@ -26,6 +26,7 @@ import co.cask.cdap.api.dataset.table.Table;
 import co.cask.mmds.Constants;
 import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.ExperimentMetaTable;
+import co.cask.mmds.data.ModelTable;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -46,7 +47,7 @@ public class ModelPrepApp extends AbstractApplication<ModelPrepApp.Conf> {
     String experimentMetaName = conf.getExperimentMetaDataset();
     String splitsName = conf.getSplitsDataset();
     createDataset(experimentMetaName, IndexedTable.class, ExperimentMetaTable.DATASET_PROPERTIES);
-    createDataset(modelMetaName, Table.class, DatasetProperties.EMPTY);
+    createDataset(modelMetaName, IndexedTable.class, ModelTable.DATASET_PROPERTIES);
     createDataset(modelComponentsName, FileSet.class, DatasetProperties.EMPTY);
     createDataset(splitsName, PartitionedFileSet.class, DataSplitTable.DATASET_PROPERTIES);
 

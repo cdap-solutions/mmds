@@ -42,7 +42,6 @@ import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelTable;
 import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SortInfo;
-import co.cask.mmds.data.SortType;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.modeler.Modelers;
 import co.cask.mmds.modeler.train.ModelOutput;
@@ -50,6 +49,7 @@ import co.cask.mmds.modeler.train.ModelOutputWriter;
 import co.cask.mmds.modeler.train.ModelTrainer;
 import co.cask.mmds.proto.BadRequestException;
 import co.cask.mmds.proto.CreateModelRequest;
+import co.cask.mmds.proto.DirectivesRequest;
 import co.cask.mmds.proto.EndpointException;
 import co.cask.mmds.proto.TrainModelRequest;
 import co.cask.mmds.spec.ParamSpec;
@@ -282,7 +282,9 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
       try {
         CreateModelRequest createRequest =
           GSON.fromJson(Bytes.toString(request.getContent()), CreateModelRequest.class);
-
+        if (createRequest == null) {
+          throw new BadRequestException("A request body must be provided containing the model information.");
+        }
         createRequest.validate();
         String modelId = store.addModel(experimentName, createRequest);
         responder.sendString(GSON.toJson(new Id(modelId)));
@@ -295,13 +297,69 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   }
 
   @PUT
-  @Path("/experiments/{experiment-name}/models/{model-id}/split")
-  public void setModelSplit(HttpServiceRequest request, HttpServiceResponder responder,
-                            @PathParam("experiment-name") final String experimentName,
-                            @PathParam("model-id") final String modelId) throws Exception {
+  @Path("/experiments/{experiment-name}/models/{model-id}/directives")
+  public void setModelDirectives(HttpServiceRequest request, HttpServiceResponder responder,
+                                 @PathParam("experiment-name") final String experimentName,
+                                 @PathParam("model-id") final String modelId) throws Exception {
     runInTx(responder, store -> {
-      Id splitId = GSON.fromJson(Bytes.toString(request.getContent()), Id.class);
-      store.setModelSplit(new ModelKey(experimentName, modelId), splitId.getId());
+      DirectivesRequest directives = GSON.fromJson(Bytes.toString(request.getContent()), DirectivesRequest.class);
+      if (directives == null) {
+        throw new BadRequestException("A request body must be provided containing the directives.");
+      }
+      directives.validate();
+      store.setModelDirectives(new ModelKey(experimentName, modelId), directives.getDirectives());
+      responder.sendStatus(200);
+    });
+  }
+
+  @POST
+  @Path("/experiments/{experiment-name}/models/{model-id}/split")
+  public void createModelSplit(HttpServiceRequest request, HttpServiceResponder responder,
+                               @PathParam("experiment-name") final String experimentName,
+                               @PathParam("model-id") final String modelId) throws Exception {
+
+    DataSplitInfo dataSplitInfo = callInTx(responder, store -> {
+      try {
+        ModelKey modelKey = new ModelKey(experimentName, modelId);
+        DataSplit splitInfo = GSON.fromJson(Bytes.toString(request.getContent()), DataSplit.class);
+        if (splitInfo == null) {
+          throw new BadRequestException("A request body must be provided containing split parameters.");
+        }
+        // if no directives are given, use the ones from the model
+        if (splitInfo.getDirectives().isEmpty()) {
+          ModelMeta modelMeta = store.getModel(modelKey);
+          splitInfo = new DataSplit(splitInfo.getDescription(), splitInfo.getType(), splitInfo.getParams(),
+                                    modelMeta.getDirectives(), splitInfo.getSchema());
+        }
+        splitInfo.validate();
+        DataSplitInfo info = store.addSplit(experimentName, splitInfo);
+        store.setModelSplit(modelKey, info.getSplitId());
+        return info;
+      } catch (JsonParseException e) {
+        throw new BadRequestException(
+          String.format("Problem occurred while parsing request for split creation for experiment '%s'. " +
+                          "Error: %s", experimentName, e.getMessage()));
+      } catch (IllegalArgumentException e) {
+        throw new BadRequestException(e.getMessage());
+      }
+    });
+
+    // happens if there was an error above
+    if (dataSplitInfo == null) {
+      return;
+    }
+
+    addSplit(dataSplitInfo);
+    responder.sendStatus(200);
+  }
+
+  @DELETE
+  @Path("/experiments/{experiment-name}/models/{model-id}/split")
+  public void unassignModelSplit(HttpServiceRequest request, HttpServiceResponder responder,
+                                 @PathParam("experiment-name") final String experimentName,
+                                 @PathParam("model-id") final String modelId) throws Exception {
+    runInTx(responder, store -> {
+      store.unassignModelSplit(new ModelKey(experimentName, modelId));
       responder.sendStatus(200);
     });
   }
@@ -314,6 +372,9 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     ModelTrainerInfo trainerInfo = callInTx(responder, store -> {
       try {
         TrainModelRequest trainRequest = GSON.fromJson(Bytes.toString(request.getContent()), TrainModelRequest.class);
+        if (trainRequest == null) {
+          throw new BadRequestException("A request body must be provided containing training parameters.");
+        }
         trainRequest.validate();
 
         ModelKey modelKey = new ModelKey(experimentName, modelId);
@@ -420,11 +481,14 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     DataSplitInfo dataSplitInfo = callInTx(responder, store -> {
       try {
         DataSplit splitInfo = GSON.fromJson(Bytes.toString(request.getContent()), DataSplit.class);
+        if (splitInfo == null) {
+          throw new BadRequestException("A request body must be provided containing split parameters.");
+        }
         splitInfo.validate();
         return store.addSplit(experimentName, splitInfo);
       } catch (JsonParseException e) {
         throw new BadRequestException(
-          String.format("Problem occurred while parsing request for model creation for experiment '%s'. " +
+          String.format("Problem occurred while parsing request for split creation for experiment '%s'. " +
                           "Error: %s", experimentName, e.getMessage()));
       } catch (IllegalArgumentException e) {
         throw new BadRequestException(e.getMessage());
@@ -436,31 +500,9 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
       return;
     }
 
-    String splitId = dataSplitInfo.getSplitId();
-    SplitKey splitKey = new SplitKey(experimentName, splitId);
-    new Thread(() -> {
-      SplitLogging.start(experimentName, splitId);
-      DatasetSplitter datasetSplitter = Splitters.getSplitter(dataSplitInfo.getDataSplit().getType());
-      try (DataSplitStatsGenerator splitStatsGenerator =
-             new DataSplitStatsGenerator(sparkSession, datasetSplitter,
-                                         context.getPluginContext(), context.getServiceDiscoverer())) {
-        DataSplitResult result = splitStatsGenerator.split(dataSplitInfo);
-        runInTx(store -> store.finishSplit(splitKey, result.getTrainingPath(),
-                                           result.getTestPath(), result.getStats()));
-      } catch (Exception e) {
-        LOG.error("Error generating split {} in experiment {}.", splitId, experimentName, e);
-        try {
-          runInTx(store -> store.splitFailed(splitKey));
-        } catch (TransactionFailureException te) {
-          LOG.error("Error marking split {} in experiment {} as failed",
-                    splitId, experimentName, te);
-        }
-      } finally {
-        SplitLogging.finish();
-      }
-    }).start();
+    addSplit(dataSplitInfo);
 
-    responder.sendString(GSON.toJson(new Id(splitId)));
+    responder.sendString(GSON.toJson(new Id(dataSplitInfo.getSplitId())));
   }
 
   @GET
@@ -548,4 +590,30 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
     return ref.get();
   }
 
+  private void addSplit(DataSplitInfo dataSplitInfo) {
+    String experimentName = dataSplitInfo.getExperiment().getName();
+    String splitId = dataSplitInfo.getSplitId();
+    SplitKey splitKey = new SplitKey(experimentName, splitId);
+    new Thread(() -> {
+      SplitLogging.start(experimentName, splitId);
+      DatasetSplitter datasetSplitter = Splitters.getSplitter(dataSplitInfo.getDataSplit().getType());
+      try (DataSplitStatsGenerator splitStatsGenerator =
+             new DataSplitStatsGenerator(sparkSession, datasetSplitter,
+                                         context.getPluginContext(), context.getServiceDiscoverer())) {
+        DataSplitResult result = splitStatsGenerator.split(dataSplitInfo);
+        runInTx(store -> store.finishSplit(splitKey, result.getTrainingPath(),
+                                           result.getTestPath(), result.getStats()));
+      } catch (Exception e) {
+        LOG.error("Error generating split {} in experiment {}.", splitId, experimentName, e);
+        try {
+          runInTx(store -> store.splitFailed(splitKey));
+        } catch (TransactionFailureException te) {
+          LOG.error("Error marking split {} in experiment {} as failed",
+                    splitId, experimentName, te);
+        }
+      } finally {
+        SplitLogging.finish();
+      }
+    }).start();
+  }
 }

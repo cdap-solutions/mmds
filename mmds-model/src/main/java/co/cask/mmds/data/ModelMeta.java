@@ -24,11 +24,11 @@ public class ModelMeta extends Model {
   private final EvaluationMetrics evaluationMetrics;
 
   private ModelMeta(String id, String name, String description, String algorithm, String split,
-                    @Nullable String predictionsDataset, ModelStatus status,
+                    @Nullable String predictionsDataset, ModelStatus status, List<String> directives,
                     Map<String, String> hyperparameters, List<String> features, String outcome,
                     Set<String> categoricalFeatures, long createtime, long trainedtime,
                     long deploytime, EvaluationMetrics evaluationMetrics) {
-    super(name, description, algorithm, split, predictionsDataset, hyperparameters);
+    super(name, description, algorithm, split, predictionsDataset, directives, hyperparameters);
     this.id = id;
     this.status = status;
     this.outcome = outcome;
@@ -188,7 +188,7 @@ public class ModelMeta extends Model {
     }
 
     public ModelMeta build() {
-      return new ModelMeta(id, name, description, algorithm, split, predictionsDataset, status,
+      return new ModelMeta(id, name, description, algorithm, split, predictionsDataset, status, directives,
                            hyperparameters, features, outcome, categoricalFeatures, createtime,
                            trainedtime, deploytime, evaluationMetrics);
     }
