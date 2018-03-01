@@ -23,29 +23,37 @@ import co.cask.cdap.test.DataSetManager;
 import co.cask.cdap.test.TestBaseWithSpark2;
 import co.cask.cdap.test.TestConfiguration;
 import co.cask.mmds.data.DataSplit;
+import co.cask.mmds.data.DataSplitInfo;
 import co.cask.mmds.data.DataSplitStats;
 import co.cask.mmds.data.DataSplitTable;
 import co.cask.mmds.data.EvaluationMetrics;
 import co.cask.mmds.data.Experiment;
 import co.cask.mmds.data.ExperimentMetaTable;
+import co.cask.mmds.data.ExperimentStore;
 import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelStatus;
 import co.cask.mmds.data.ModelTable;
+import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SortInfo;
 import co.cask.mmds.data.SortType;
 import co.cask.mmds.data.SplitKey;
 import co.cask.mmds.data.SplitStatus;
 import co.cask.mmds.manager.ModelPrepApp;
+import co.cask.mmds.proto.ConflictException;
 import co.cask.mmds.proto.CreateModelRequest;
+import co.cask.mmds.proto.TrainModelRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -57,16 +65,38 @@ public class StoreTest extends TestBaseWithSpark2 {
   @ClassRule
   public static final TestConfiguration CONFIG = new TestConfiguration("explore.enabled", false);
 
+  private DataSetManager<IndexedTable> experimentsManager;
+  private ExperimentMetaTable experimentsTable;
+  private DataSetManager<PartitionedFileSet> splitsManager;
+  private DataSplitTable splitTable;
+  private DataSetManager<IndexedTable> modelsManager;
+  private ModelTable modelTable;
+  private ExperimentStore store;
+
   @BeforeClass
   public static void setupTestClass() throws Exception {
     deployApplication(ModelPrepApp.class);
   }
 
+  @Before
+  public void setupTest() throws Exception {
+    experimentsManager = getDataset(Constants.Dataset.EXPERIMENTS_META);
+    experimentsTable = new ExperimentMetaTable(experimentsManager.get());
+    splitsManager = getDataset(Constants.Dataset.SPLITS);
+    splitTable = new DataSplitTable(splitsManager.get());
+    modelsManager = getDataset(Constants.Dataset.MODEL_META);
+    modelTable = new ModelTable(modelsManager.get());
+    store = new ExperimentStore(experimentsTable, splitTable, modelTable);
+  }
+
+  private void flush() {
+    experimentsManager.flush();
+    splitsManager.flush();
+    modelsManager.flush();
+  }
+
   @Test
   public void testExperimentsTable() throws Exception {
-    DataSetManager<IndexedTable> manager = getDataset(Constants.Dataset.EXPERIMENTS_META);
-    ExperimentMetaTable experimentsTable = new ExperimentMetaTable(manager.get());
-
     Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
 
     String experiment1Name = "exp123";
@@ -94,12 +124,12 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(ImmutableList.of(experiment1), list);
 
     experimentsTable.delete(experiment2Name);
-    manager.flush();
+    flush();
     Assert.assertNull(experimentsTable.get(experiment2Name));
     Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 1L);
 
     experimentsTable.delete(experiment1Name);
-    manager.flush();
+    flush();
     Assert.assertNull(experimentsTable.get(experiment1Name));
 
     Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
@@ -108,9 +138,6 @@ public class StoreTest extends TestBaseWithSpark2 {
 
   @Test
   public void testModelsTable() throws Exception {
-    DataSetManager<IndexedTable> manager = getDataset(Constants.Dataset.MODEL_META);
-    ModelTable modelTable = new ModelTable(manager.get());
-
     Experiment experiment1 = new Experiment("e1", "", "path", "o1", "string", "workspace");
     Experiment experiment2 = new Experiment("e2", "", "path", "o1", "string", "workspace");
 
@@ -119,25 +146,25 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
 
     long createTs = System.currentTimeMillis();
-    CreateModelRequest createRequest = new CreateModelRequest("model1", "desc1");
+    CreateModelRequest createRequest = new CreateModelRequest("model1", "desc1", Collections.emptyList(), null);
     String model1Id = modelTable.add(experiment1, createRequest, createTs);
     ModelMeta model1Meta = ModelMeta.builder(model1Id)
       .setDescription(createRequest.getDescription())
       .setName(createRequest.getName())
       .setOutcome(experiment1.getOutcome())
       .setCreateTime(createTs)
-      .setStatus(ModelStatus.EMPTY)
+      .setStatus(ModelStatus.PREPARING)
       .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
       .build();
 
-    createRequest = new CreateModelRequest("model2", "desc2");
+    createRequest = new CreateModelRequest("model2", "desc2", Collections.emptyList(), null);
     String model2Id = modelTable.add(experiment2, createRequest, createTs);
     ModelMeta model2Meta = ModelMeta.builder(model2Id)
       .setDescription(createRequest.getDescription())
       .setName(createRequest.getName())
       .setOutcome(experiment2.getOutcome())
       .setCreateTime(createTs)
-      .setStatus(ModelStatus.EMPTY)
+      .setStatus(ModelStatus.PREPARING)
       .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
       .build();
 
@@ -165,21 +192,18 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
 
     modelTable.delete(experiment1.getName());
-    manager.flush();
+    flush();
     Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10).getModels().isEmpty());
     Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
     Assert.assertFalse(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
     modelTable.delete(experiment2.getName());
-    manager.flush();
+    flush();
     Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
     Assert.assertNull(modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
   }
 
   @Test
   public void testSplitsTable() throws Exception {
-    DataSetManager<PartitionedFileSet> manager = getDataset(Constants.Dataset.SPLITS);
-    DataSplitTable splitTable = new DataSplitTable(manager.get());
-
     String experiment1 = "e1";
     String experiment2 = "e2";
     Assert.assertTrue(splitTable.list(experiment1).isEmpty());
@@ -229,22 +253,19 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(ImmutableList.of(split2Stats), splitTable.list(experiment2));
 
     splitTable.delete(split1Key);
-    manager.flush();
+    flush();
     Assert.assertTrue(splitTable.list(experiment1).isEmpty());
     Assert.assertFalse(splitTable.list(experiment2).isEmpty());
     Assert.assertNull(splitTable.get(split1Key));
 
     splitTable.delete(split2Key);
-    manager.flush();
+    flush();
     Assert.assertTrue(splitTable.list(experiment2).isEmpty());
     Assert.assertNull(splitTable.get(split2Key));
   }
 
   @Test
   public void testExperimentsSorting() throws Exception {
-    DataSetManager<IndexedTable> manager = getDataset(Constants.Dataset.EXPERIMENTS_META);
-    ExperimentMetaTable experimentsTable = new ExperimentMetaTable(manager.get());
-
     Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
 
     String experiment1Name = "abc123";
@@ -287,21 +308,173 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(ImmutableList.of(experiment1), list);
 
     experimentsTable.delete(experiment5Name);
-    manager.flush();
+    flush();
 
     experimentsTable.delete(experiment4Name);
-    manager.flush();
+    flush();
 
     experimentsTable.delete(experiment3Name);
-    manager.flush();
+    flush();
 
     experimentsTable.delete(experiment2Name);
-    manager.flush();
+    flush();
 
     experimentsTable.delete(experiment1Name);
-    manager.flush();
+    flush();
 
     Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
     Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 0L);
+  }
+
+  @Test
+  public void testModelLifecycle() throws Exception {
+    // create an experiment
+    Experiment experiment = new Experiment("re", "desc", "srcpath", "outcome", "string", "workspace");
+    store.putExperiment(experiment);
+    flush();
+
+    // create a model
+    List<String> directives = new ArrayList<>();
+    directives.add("d1");
+    directives.add("d2");
+    CreateModelRequest createModelRequest = new CreateModelRequest("model1", "desc", directives, null);
+    String modelId = store.addModel(experiment.getName(), createModelRequest);
+    flush();
+    ModelKey modelKey = new ModelKey(experiment.getName(), modelId);
+
+    ModelMeta modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.PREPARING, modelMeta.getStatus());
+
+    // update directives on the model
+    directives.add("d3");
+    store.setModelDirectives(modelKey, directives);
+    flush();
+
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(directives, modelMeta.getDirectives());
+
+    TrainModelRequest trainModelRequest =
+      new TrainModelRequest("decision.tree.classifier", null, Collections.emptyMap());
+
+    // cannot unassign a split since there is no split
+    try {
+      store.unassignModelSplit(modelKey);
+      Assert.fail();
+    } catch (ConflictException e) {
+      // expected
+    }
+    // cannot train the model without a split
+    try {
+      store.trainModel(modelKey, trainModelRequest);
+      Assert.fail();
+    } catch (ConflictException e) {
+      // expected
+    }
+
+    // create a split for the model
+    Schema schema = Schema.recordOf("rec",
+                                    Schema.Field.of("outcome", Schema.of(Schema.Type.STRING)),
+                                    Schema.Field.of("f1", Schema.of(Schema.Type.STRING)));
+    DataSplit dataSplit = new DataSplit("desc", "random", Collections.emptyMap(), directives, schema);
+    DataSplitInfo dataSplitInfo = store.addSplit(experiment.getName(), dataSplit);
+    flush();
+    SplitKey splitKey = new SplitKey(experiment.getName(), dataSplitInfo.getSplitId());
+
+    // assign the split to the model, model should be in SPLITTING state
+    store.setModelSplit(modelKey, splitKey.getSplit());
+    flush();
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.SPLITTING, modelMeta.getStatus());
+    // cannot unassign a split until it is in SPLIT_FAILED or DATA_READY state
+    try {
+      store.unassignModelSplit(modelKey);
+      Assert.fail();
+    } catch (ConflictException e) {
+      // expected
+    }
+    // cannot train the model without a split
+    try {
+      store.trainModel(modelKey, trainModelRequest);
+      Assert.fail();
+    } catch (ConflictException e) {
+      // expected
+    }
+
+    // finish the split
+    store.finishSplit(splitKey, "trainingPath", "testPath", Collections.emptyList());
+    flush();
+
+    // model should now be in DATA_READY state with features set
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.DATA_READY, modelMeta.getStatus());
+    Assert.assertEquals(ImmutableList.of("f1"), modelMeta.getFeatures());
+
+    // should now be able to unassign the split
+    store.unassignModelSplit(modelKey);
+    flush();
+    // split should have been deleted too
+    Assert.assertTrue(store.listSplits(experiment.getName()).isEmpty());
+
+    // model should now be back in PREPARING state
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.PREPARING, modelMeta.getStatus());
+
+    // create another split and assign it to the model again, model should be in SPLITTING
+    dataSplitInfo = store.addSplit(experiment.getName(), dataSplit);
+    flush();
+    splitKey = new SplitKey(experiment.getName(), dataSplitInfo.getSplitId());
+    store.setModelSplit(modelKey, splitKey.getSplit());
+    flush();
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.SPLITTING, modelMeta.getStatus());
+
+    // finish the split
+    store.finishSplit(splitKey, "trainingPath", "testPath", Collections.emptyList());
+    flush();
+    // model should now be in DATA_READY state with features set
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.DATA_READY, modelMeta.getStatus());
+    Assert.assertEquals(ImmutableList.of("f1"), modelMeta.getFeatures());
+
+    // now train the model
+    ModelTrainerInfo modelTrainerInfo = store.trainModel(modelKey, trainModelRequest);
+    flush();
+    // model should be in TRAINING state
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.TRAINING, modelMeta.getStatus());
+
+    // should not be able to perform any lifecycle operations
+    try {
+      store.trainModel(modelKey, trainModelRequest);
+      Assert.fail();
+    } catch (ConflictException e) {
+      // expected
+    }
+    try {
+      store.unassignModelSplit(modelKey);
+      Assert.fail();
+    } catch (ConflictException e) {
+      // expected
+    }
+
+    store.updateModelMetrics(modelKey, new EvaluationMetrics(1.0f, 1.0f, 1.0f), System.currentTimeMillis(),
+                             ImmutableSet.of("f1"));
+    flush();
+
+    // should now be in TRAINED state
+    modelMeta = store.getModel(modelKey);
+    Assert.assertEquals(ModelStatus.TRAINED, modelMeta.getStatus());
+
+    // creating a new model with an existing split should create it in DATA_READY state.
+    createModelRequest = new CreateModelRequest("model2", "desc", Collections.emptyList(), splitKey.getSplit());
+    String modelId2 = store.addModel(experiment.getName(), createModelRequest);
+    flush();
+
+    // check model is in DATA_READY with the correct directives and features set
+    ModelKey modelKey2 = new ModelKey(experiment.getName(), modelId2);
+    modelMeta = store.getModel(modelKey2);
+    Assert.assertEquals(ModelStatus.DATA_READY, modelMeta.getStatus());
+    Assert.assertEquals(ImmutableList.of("f1"), modelMeta.getFeatures());
+    Assert.assertEquals(directives, modelMeta.getDirectives());
   }
 }

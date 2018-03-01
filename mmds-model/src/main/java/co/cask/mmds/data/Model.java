@@ -16,8 +16,10 @@
 
 package co.cask.mmds.data;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -31,16 +33,18 @@ public class Model {
   private final String algorithm;
   private final String split;
   private final String predictionsDataset;
+  private final List<String> directives;
   private final Map<String, String> hyperparameters;
 
   protected Model(String name, String description, String algorithm, String split,
-                  @Nullable String predictionsDataset, Map<String, String> hyperparameters) {
+                  @Nullable String predictionsDataset, List<String> directives, Map<String, String> hyperparameters) {
     this.name = name;
     this.description = description;
     this.algorithm = algorithm;
     this.split = split;
     this.predictionsDataset = predictionsDataset;
-    this.hyperparameters = hyperparameters;
+    this.directives = Collections.unmodifiableList(directives);
+    this.hyperparameters = Collections.unmodifiableMap(hyperparameters);
   }
 
   public String getName() {
@@ -51,10 +55,16 @@ public class Model {
     return description == null ? "" : description;
   }
 
+  public List<String> getDirectives() {
+    return directives;
+  }
+
+  @Nullable
   public String getAlgorithm() {
     return algorithm;
   }
 
+  @Nullable
   public String getSplit() {
     return split;
   }
@@ -108,9 +118,11 @@ public class Model {
     protected String algorithm;
     protected String split;
     protected String predictionsDataset;
+    protected List<String> directives;
     protected Map<String, String> hyperparameters;
 
     protected Builder() {
+      directives = new ArrayList<>();
       hyperparameters = new HashMap<>();
     }
 
@@ -145,8 +157,14 @@ public class Model {
       return (T) this;
     }
 
+    public T setDirectives(List<String> directives) {
+      this.directives.clear();
+      this.directives.addAll(directives);
+      return (T) this;
+    }
+
     public Model build() {
-      return new Model(name, description, algorithm, split, predictionsDataset, hyperparameters);
+      return new Model(name, description, algorithm, split, predictionsDataset, directives, hyperparameters);
     }
   }
 

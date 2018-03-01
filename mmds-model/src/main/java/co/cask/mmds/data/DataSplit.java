@@ -84,6 +84,9 @@ public class DataSplit {
     if (schema == null) {
       throw new IllegalArgumentException("A schema must be specified.");
     }
+    if (directives == null) {
+      throw new IllegalArgumentException("Directives must be specified.");
+    }
     DatasetSplitter splitter = Splitters.getSplitter(type);
     if (splitter == null) {
       throw new IllegalArgumentException("No splitter of type " + type + " exists.");

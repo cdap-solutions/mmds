@@ -2,6 +2,7 @@ package co.cask.mmds.data;
 
 import co.cask.cdap.api.common.Bytes;
 import co.cask.cdap.api.data.schema.Schema;
+import co.cask.cdap.api.dataset.DatasetProperties;
 import co.cask.cdap.api.dataset.lib.IndexedTable;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
@@ -49,6 +50,7 @@ public class ModelTable extends CountTable<IndexedTable> {
   private static final String TRAIN_TIME_COL = "trainedtime";
   private static final String DEPLOY_TIME_COL = "deploytime";
   private static final String STATUS_COL = "status";
+  private static final String DIRECTIVES_COL = "directives";
   // evaluation metric columns
   private static final String PRECISION_COL = "precision";
   private static final String RECALL_COL = "recall";
@@ -57,6 +59,9 @@ public class ModelTable extends CountTable<IndexedTable> {
   private static final String R2_COL = "r2";
   private static final String EVARIANCE_COL = "evariance";
   private static final String MAE_COL = "mae";
+  public static final DatasetProperties DATASET_PROPERTIES = DatasetProperties.builder()
+    .add(IndexedTable.INDEX_COLUMNS_CONF_KEY, NAME_COL)
+    .build();
 
   public ModelTable(IndexedTable table) {
     super(table);
@@ -197,12 +202,23 @@ public class ModelTable extends CountTable<IndexedTable> {
       .add(DESC_COL, createRequest.getDescription())
       .add(OUTCOME_COL, experiment.getOutcome())
       .add(CREATE_TIME_COL, createTs)
-      .add(STATUS_COL, ModelStatus.EMPTY.name())
+      .add(STATUS_COL, ModelStatus.PREPARING.name())
       .add(TRAIN_TIME_COL, -1L)
       .add(DEPLOY_TIME_COL, -1L);
+    if (!createRequest.getDirectives().isEmpty()) {
+      put.add(DIRECTIVES_COL, GSON.toJson(createRequest.getDirectives()));
+    }
     table.put(put);
     incrementRowCount(experiment.getName());
     return id;
+  }
+
+  public void setDirectives(ModelKey key, List<String> directives) {
+    if (directives.isEmpty()) {
+      return;
+    }
+    Put put = new Put(getKey(key)).add(DIRECTIVES_COL, GSON.toJson(directives));
+    table.put(put);
   }
 
   public void setSplit(ModelKey key, DataSplitStats split, String outcome) {
@@ -232,8 +248,13 @@ public class ModelTable extends CountTable<IndexedTable> {
     Put put = new Put(getKey(key))
       .add(SPLIT_COL, split.getId())
       .add(STATUS_COL, status.name())
+      .add(DIRECTIVES_COL, GSON.toJson(split.getDirectives()))
       .add(FEATURES_COL, GSON.toJson(featureNames));
     table.put(put);
+  }
+
+  public void unassignSplit(ModelKey key) {
+    table.delete(getKey(key), Bytes.toBytes(SPLIT_COL));
   }
 
   public void setTrainingInfo(ModelKey key, TrainModelRequest trainRequest) {
@@ -294,6 +315,8 @@ public class ModelTable extends CountTable<IndexedTable> {
     description = description == null ? "" : description;
     String statusStr = row.getString(STATUS_COL);
     ModelStatus status = statusStr == null ? null : ModelStatus.valueOf(statusStr);
+    String directivesStr = row.getString(DIRECTIVES_COL);
+    List<String> directives = directivesStr == null ? new ArrayList<>() : GSON.fromJson(directivesStr, LIST_TYPE);
 
     EvaluationMetrics evaluationMetrics = new EvaluationMetrics(
       row.getDouble(PRECISION_COL), row.getDouble(RECALL_COL), row.getDouble(F1_COL),
@@ -312,6 +335,7 @@ public class ModelTable extends CountTable<IndexedTable> {
       .setTrainedTime(row.getLong(TRAIN_TIME_COL, -1))
       .setDeployTime(row.getLong(DEPLOY_TIME_COL, -1))
       .setEvaluationMetrics(evaluationMetrics)
+      .setDirectives(directives)
       .build();
   }
 

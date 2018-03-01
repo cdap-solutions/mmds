@@ -1,5 +1,7 @@
 package co.cask.mmds.manager;
 
+import co.cask.mmds.proto.BadRequestException;
+
 /**
  * Holds an id
  */
@@ -12,5 +14,11 @@ public class Id {
 
   public String getId() {
     return id;
+  }
+
+  public void validate() {
+    if (id == null) {
+      throw new BadRequestException("Id must be specified.");
+    }
   }
 }
