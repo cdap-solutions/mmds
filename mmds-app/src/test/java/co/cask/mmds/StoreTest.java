@@ -55,7 +55,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Unit tests.
@@ -142,64 +141,44 @@ public class StoreTest extends TestBaseWithSpark2 {
     Experiment experiment2 = new Experiment("e2", "", "path", "o1", "string", "workspace");
 
     Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), "abc")));
-    Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10).getModels().isEmpty());
-    Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
+    Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10, new SortInfo(SortType.ASC)).getModels().isEmpty());
+    Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10, new SortInfo(SortType.ASC)).getModels().isEmpty());
 
-    long createTs = System.currentTimeMillis();
-    CreateModelRequest createRequest = new CreateModelRequest("model1", "desc1", Collections.emptyList(), null);
-    String model1Id = modelTable.add(experiment1, createRequest, createTs);
-    ModelMeta model1Meta = ModelMeta.builder(model1Id)
-      .setDescription(createRequest.getDescription())
-      .setName(createRequest.getName())
-      .setOutcome(experiment1.getOutcome())
-      .setCreateTime(createTs)
-      .setStatus(ModelStatus.PREPARING)
-      .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
-      .build();
+    ModelMeta e1Model1 = build(experiment1, "model1");
+    ModelMeta e1Model2 = build(experiment1, "model2");
+    ModelMeta e1Model3 = build(experiment1, "model3");
+    ModelMeta e1Model4 = build(experiment1, "model4");
+    ModelMeta e1Model5 = build(experiment1, "model5");
 
-    createRequest = new CreateModelRequest("model2", "desc2", Collections.emptyList(), null);
-    String model2Id = modelTable.add(experiment2, createRequest, createTs);
-    ModelMeta model2Meta = ModelMeta.builder(model2Id)
-      .setDescription(createRequest.getDescription())
-      .setName(createRequest.getName())
-      .setOutcome(experiment2.getOutcome())
-      .setCreateTime(createTs)
-      .setStatus(ModelStatus.PREPARING)
-      .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
-      .build();
+    Assert.assertEquals(ImmutableList.of(e1Model1, e1Model2), modelTable.list(experiment1.getName(), 0, 2,
+                                                                      new SortInfo(SortType.ASC)).getModels());
+    Assert.assertEquals(ImmutableList.of(e1Model3, e1Model4), modelTable.list(experiment1.getName(), 2, 2,
+                                                                              new SortInfo(SortType.ASC)).getModels());
+    Assert.assertEquals(ImmutableList.of(e1Model5), modelTable.list(experiment1.getName(), 4, 10,
+                                                                              new SortInfo(SortType.ASC)).getModels());
 
-    Assert.assertEquals(ImmutableList.of(model1Meta), modelTable.list(experiment1.getName(), 0, 10).getModels());
-    Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
-    Assert.assertEquals(ImmutableList.of(model2Meta), modelTable.list(experiment2.getName(), 0, 10).getModels());
-    Assert.assertEquals(model2Meta, modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
+    ModelMeta e2Model1 = build(experiment2, "model1");
+    ModelMeta e2Model2 = build(experiment2, "model2");
+    ModelMeta e2Model3 = build(experiment2, "model3");
+    ModelMeta e2Model4 = build(experiment2, "model4");
+    ModelMeta e2Model5 = build(experiment2, "model5");
 
-    long trainTs = System.currentTimeMillis();
-    Set<String> categoricalFeatures = ImmutableSet.of("f1");
-    EvaluationMetrics evaluationMetrics = new EvaluationMetrics(.9d, .8d, .1d);
-    modelTable.update(new ModelKey(experiment1.getName(), model1Id), evaluationMetrics,
-                      trainTs, categoricalFeatures);
-    model1Meta = ModelMeta.builder(model1Id)
-      .setDescription("desc1")
-      .setName("model1")
-      .setCreateTime(createTs)
-      .setTrainedTime(trainTs)
-      .setCategoricalFeatures(categoricalFeatures)
-      .setEvaluationMetrics(evaluationMetrics)
-      .setDeployTime(-1L)
-      .setOutcome(experiment1.getOutcome())
-      .setStatus(ModelStatus.TRAINED)
-      .build();
-    Assert.assertEquals(model1Meta, modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
+    Assert.assertEquals(ImmutableList.of(e2Model5, e2Model4), modelTable.list(experiment2.getName(), 0, 2,
+                                                                              new SortInfo(SortType.DESC)).getModels());
+    Assert.assertEquals(ImmutableList.of(e2Model3, e2Model2), modelTable.list(experiment2.getName(), 2, 2,
+                                                                              new SortInfo(SortType.DESC)).getModels());
+    Assert.assertEquals(ImmutableList.of(e2Model1), modelTable.list(experiment2.getName(), 4, 10,
+                                                                    new SortInfo(SortType.DESC)).getModels());
 
     modelTable.delete(experiment1.getName());
     flush();
-    Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10).getModels().isEmpty());
-    Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), model1Id)));
-    Assert.assertFalse(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
+    Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10, new SortInfo(SortType.ASC)).getModels().isEmpty());
+    Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), e1Model1.getId())));
+    Assert.assertFalse(modelTable.list(experiment2.getName(), 0, 10, new SortInfo(SortType.ASC)).getModels().isEmpty());
     modelTable.delete(experiment2.getName());
     flush();
-    Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10).getModels().isEmpty());
-    Assert.assertNull(modelTable.get(new ModelKey(experiment2.getName(), model2Id)));
+    Assert.assertTrue(modelTable.list(experiment2.getName(), 0, 10, new SortInfo(SortType.ASC)).getModels().isEmpty());
+    Assert.assertNull(modelTable.get(new ModelKey(experiment2.getName(), e1Model2.getId())));
   }
 
   @Test
@@ -476,5 +455,19 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(ModelStatus.DATA_READY, modelMeta.getStatus());
     Assert.assertEquals(ImmutableList.of("f1"), modelMeta.getFeatures());
     Assert.assertEquals(directives, modelMeta.getDirectives());
+  }
+
+  private ModelMeta build(Experiment experiment, String model) {
+    long createTs = System.currentTimeMillis();
+    CreateModelRequest createRequest = new CreateModelRequest(model, "desc1", Collections.emptyList(), null);
+    String model1Id = modelTable.add(experiment, createRequest, createTs);
+    return ModelMeta.builder(model1Id)
+      .setDescription(createRequest.getDescription())
+      .setName(createRequest.getName())
+      .setOutcome(experiment.getOutcome())
+      .setCreateTime(createTs)
+      .setStatus(ModelStatus.PREPARING)
+      .setEvaluationMetrics(new EvaluationMetrics(null, null, null, null, null, null, null))
+      .build();
   }
 }

@@ -246,10 +246,12 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   public void listModels(HttpServiceRequest request, HttpServiceResponder responder,
                          final @PathParam("experiment-name") String experimentName,
                          final @QueryParam("offset") @DefaultValue("0") int offset,
-                         final @QueryParam("limit") @DefaultValue("20") int limit) {
+                         final @QueryParam("limit") @DefaultValue("20") int limit,
+                         final @QueryParam("sort") @DefaultValue("name asc") String sort) {
     runInTx(responder, store -> {
       validate(offset, limit);
-      responder.sendString(GSON.toJson(store.listModels(experimentName, offset, limit)));
+      SortInfo sortInfo = SortInfo.parse(sort);
+      responder.sendString(GSON.toJson(store.listModels(experimentName, offset, limit, sortInfo)));
     });
   }
 

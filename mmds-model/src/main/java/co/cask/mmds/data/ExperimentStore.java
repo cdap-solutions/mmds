@@ -65,7 +65,7 @@ public class ExperimentStore {
     CategoricalHisto algoHisto = new CategoricalHisto();
     CategoricalHisto statusHisto = new CategoricalHisto();
 
-    List<ModelMeta> models = listModels(experimentName, 0, Integer.MAX_VALUE).getModels();
+    List<ModelMeta> models = listModels(experimentName, 0, Integer.MAX_VALUE, new SortInfo(SortType.ASC)).getModels();
     if (models.isEmpty()) {
       return new ExperimentStats(experiment, metricStats, new ColumnStats(algoHisto), new ColumnStats(statusHisto));
     }
@@ -192,9 +192,9 @@ public class ExperimentStore {
     experiments.delete(experimentName);
   }
 
-  public ModelsMeta listModels(String experimentName, int offset, int limit) {
+  public ModelsMeta listModels(String experimentName, int offset, int limit, SortInfo sortInfo) {
     getExperiment(experimentName);
-    return models.list(experimentName, offset, limit);
+    return models.list(experimentName, offset, limit, sortInfo);
   }
 
   public ModelMeta getModel(ModelKey modelKey) {
