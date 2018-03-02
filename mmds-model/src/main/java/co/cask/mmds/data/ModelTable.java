@@ -15,6 +15,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -59,6 +61,7 @@ public class ModelTable extends CountTable<IndexedTable> {
   private static final String R2_COL = "r2";
   private static final String EVARIANCE_COL = "evariance";
   private static final String MAE_COL = "mae";
+
   public static final DatasetProperties DATASET_PROPERTIES = DatasetProperties.builder()
     .add(IndexedTable.INDEX_COLUMNS_CONF_KEY, NAME_COL)
     .build();
@@ -73,34 +76,39 @@ public class ModelTable extends CountTable<IndexedTable> {
    * @param experiment the experiment name
    * @param offset the number of initial models to ignore and not add to the results
    * @param limit upper limit on number of results returned.
+   * @param sortInfo sort information about sort order and field
    *
    * @return all models in the experiment starting from offset
    */
-  public ModelsMeta list(String experiment, int offset, int limit) {
-    byte[] startKey = Bytes.toBytes(experiment + SEPARATOR);
-    Scan scan = new Scan(startKey, Bytes.stopKeyForPrefix(startKey));
-    int count = 0;
-    int cursor = 0;
+  public ModelsMeta list(String experiment, int offset, int limit, SortInfo sortInfo) {
+    SortType sortType = sortInfo.getSortType();
 
     List<ModelMeta> models = new ArrayList<>();
-    try (Scanner scanner = table.scan(scan)) {
+    byte[] startKey = Bytes.toBytes(experiment + SEPARATOR);
+    try (Scanner scanner = table.scan(startKey, Bytes.stopKeyForPrefix(startKey))) {
       Row row;
       while ((row = scanner.next()) != null) {
-        if (cursor < offset) {
-          cursor++;
-          continue;
-        }
-
-        if (count >= limit) {
-          break;
-        }
-
+        // TODO CDAP-13141: Devise an efficient algorihm to avoid in memory collection of models
         models.add(fromRow(row));
-        count++;
       }
     }
 
-    return new ModelsMeta(getTotalCount(experiment), models);
+    Collections.sort(models, sortType.equals(SortType.DESC) ?
+      new Comparator<ModelMeta>() {
+        @Override
+        public int compare(ModelMeta o1, ModelMeta o2) {
+          return o2.getName().compareTo(o1.getName());
+        }
+      } : new Comparator<ModelMeta>() {
+      @Override
+      public int compare(ModelMeta o1, ModelMeta o2) {
+        return o1.getName().compareTo(o2.getName());
+      }
+    });
+
+
+    return models.isEmpty() ? new ModelsMeta(models.size(), models) :
+      new ModelsMeta(models.size(), models.subList(offset, Math.min(offset + limit, models.size())));
   }
 
   /**
