@@ -35,22 +35,19 @@ public class Experiment {
   private final String srcpath;
   private final String outcome;
   private final String outcomeType;
-  private final String workspaceId;
 
 
   public Experiment(String name, Experiment experiment) {
     this(name, experiment.getDescription(), experiment.getSrcpath(),
-         experiment.getOutcome(), experiment.getOutcomeType(), experiment.getWorkspaceId());
+         experiment.getOutcome(), experiment.getOutcomeType());
   }
 
-  public Experiment(String name, String description, String srcpath,
-                    String outcome, String outcomeType, String workspaceId) {
+  public Experiment(String name, String description, String srcpath, String outcome, String outcomeType) {
     this.name = name;
     this.description = description == null ? "" : description;
     this.srcpath = srcpath;
     this.outcome = outcome;
     this.outcomeType = outcomeType;
-    this.workspaceId = workspaceId;
   }
 
   public String getName() {
@@ -73,10 +70,6 @@ public class Experiment {
     return outcomeType;
   }
 
-  public String getWorkspaceId() {
-    return workspaceId;
-  }
-
   public void validate() {
     if (srcpath == null || srcpath.isEmpty()) {
       throw new IllegalArgumentException("Experiment srcpath must be provided.");
@@ -97,9 +90,6 @@ public class Experiment {
       throw new IllegalArgumentException(String.format("Experiment outcomeType '%s' is invalid. Must be one of '%s'.",
                                                        outcomeType, Joiner.on(',').join(VALID_TYPES)));
     }
-    if (workspaceId == null || workspaceId.isEmpty()) {
-      throw new IllegalArgumentException("Experiment workspaceId must be provided.");
-    }
   }
 
   @Override
@@ -117,13 +107,12 @@ public class Experiment {
       Objects.equals(description, that.description) &&
       Objects.equals(srcpath, that.srcpath) &&
       Objects.equals(outcome, that.outcome) &&
-      Objects.equals(outcomeType, that.outcomeType) &&
-      Objects.equals(workspaceId, that.workspaceId);
+      Objects.equals(outcomeType, that.outcomeType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, description, srcpath, outcome, outcomeType, workspaceId);
+    return Objects.hash(name, description, srcpath, outcome, outcomeType);
   }
 
   @Override
@@ -134,7 +123,6 @@ public class Experiment {
       ", srcpath='" + srcpath + '\'' +
       ", outcome='" + outcome + '\'' +
       ", outcomeType='" + outcomeType + '\'' +
-      ", workspaceId='" + workspaceId + '\'' +
       '}';
   }
 }

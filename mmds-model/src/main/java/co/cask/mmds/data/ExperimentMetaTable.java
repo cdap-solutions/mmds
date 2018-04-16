@@ -28,7 +28,6 @@ public class ExperimentMetaTable extends CountTable<IndexedTable> {
   private final static String SRCPATH_COL = "srcpath";
   private final static String OUTCOME_COL = "outcome";
   private final static String OUTCOME_TYPE_COL = "outcomeType";
-  private final static String WORKSPACE_COL = "workspace";
 
   private final static Schema SCHEMA = Schema.recordOf(
     "experiments",
@@ -37,7 +36,6 @@ public class ExperimentMetaTable extends CountTable<IndexedTable> {
     Schema.Field.of(SRCPATH_COL, Schema.of(Schema.Type.STRING)),
     Schema.Field.of(OUTCOME_COL, Schema.of(Schema.Type.STRING)),
     Schema.Field.of(OUTCOME_TYPE_COL, Schema.of(Schema.Type.STRING)),
-    Schema.Field.of(WORKSPACE_COL, Schema.of(Schema.Type.STRING)),
     Schema.Field.of(TOTALS_COL, Schema.nullableOf(Schema.of(Schema.Type.LONG)))
   );
   public static final DatasetProperties DATASET_PROPERTIES = DatasetProperties.builder()
@@ -156,8 +154,7 @@ public class ExperimentMetaTable extends CountTable<IndexedTable> {
       .add(DESC_COL, experiment.getDescription())
       .add(SRCPATH_COL, experiment.getSrcpath())
       .add(OUTCOME_COL, experiment.getOutcome())
-      .add(OUTCOME_TYPE_COL, experiment.getOutcomeType())
-      .add(WORKSPACE_COL, experiment.getWorkspaceId());
+      .add(OUTCOME_TYPE_COL, experiment.getOutcomeType());
     table.put(put);
 
     if (isNewExperiment) {
@@ -167,6 +164,6 @@ public class ExperimentMetaTable extends CountTable<IndexedTable> {
 
   private Experiment fromRow(Row row) {
     return new Experiment(row.getString(NAME_COL), row.getString(DESC_COL), row.getString(SRCPATH_COL),
-                          row.getString(OUTCOME_COL), row.getString(OUTCOME_TYPE_COL), row.getString(WORKSPACE_COL));
+                          row.getString(OUTCOME_COL), row.getString(OUTCOME_TYPE_COL));
   }
 }
