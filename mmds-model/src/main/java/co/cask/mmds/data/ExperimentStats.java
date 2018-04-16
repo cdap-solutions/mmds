@@ -32,7 +32,7 @@ public class ExperimentStats extends Experiment {
   public ExperimentStats(Experiment experiment, Map<String, ColumnStats> evaluationMetrics,
                          ColumnStats algorithms, ColumnStats statuses) {
     super(experiment.getName(), experiment.getDescription(), experiment.getSrcpath(), experiment.getOutcome(),
-          experiment.getOutcomeType());
+          experiment.getOutcomeType(), experiment.getDirectives());
     this.evaluationMetrics = Collections.unmodifiableMap(new HashMap<>(evaluationMetrics));
     this.algorithms = algorithms;
     this.statuses = statuses;

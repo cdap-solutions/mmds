@@ -1,15 +1,16 @@
 package co.cask.mmds.data;
 
 import co.cask.cdap.api.common.Bytes;
-import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.dataset.DatasetProperties;
 import co.cask.cdap.api.dataset.lib.IndexedTable;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
 import co.cask.cdap.api.dataset.table.Scanner;
-import co.cask.cdap.api.dataset.table.Table;
 import com.google.common.base.Joiner;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,25 +24,16 @@ import javax.annotation.Nullable;
  * be used in plugins.
  */
 public class ExperimentMetaTable extends CountTable<IndexedTable> {
-  private final static String NAME_COL = "name";
-  private final static String DESC_COL = "description";
-  private final static String SRCPATH_COL = "srcpath";
-  private final static String OUTCOME_COL = "outcome";
-  private final static String OUTCOME_TYPE_COL = "outcomeType";
-
-  private final static Schema SCHEMA = Schema.recordOf(
-    "experiments",
-    Schema.Field.of(NAME_COL, Schema.of(Schema.Type.STRING)),
-    Schema.Field.of(DESC_COL, Schema.of(Schema.Type.STRING)),
-    Schema.Field.of(SRCPATH_COL, Schema.of(Schema.Type.STRING)),
-    Schema.Field.of(OUTCOME_COL, Schema.of(Schema.Type.STRING)),
-    Schema.Field.of(OUTCOME_TYPE_COL, Schema.of(Schema.Type.STRING)),
-    Schema.Field.of(TOTALS_COL, Schema.nullableOf(Schema.of(Schema.Type.LONG)))
-  );
+  private static final Gson GSON = new Gson();
+  private static final Type LIST_TYPE = new TypeToken<List<String>>() { }.getType();
+  private static final String NAME_COL = "name";
+  private static final String DESC_COL = "description";
+  private static final String SRCPATH_COL = "srcpath";
+  private static final String OUTCOME_COL = "outcome";
+  private static final String OUTCOME_TYPE_COL = "outcomeType";
+  private static final String DIRECTIVES_COL = "directives";
   public static final DatasetProperties DATASET_PROPERTIES = DatasetProperties.builder()
     .add(IndexedTable.INDEX_COLUMNS_CONF_KEY, Joiner.on(",").join(NAME_COL, SRCPATH_COL))
-    .add(Table.PROPERTY_SCHEMA, SCHEMA.toString())
-    .add(Table.PROPERTY_SCHEMA_ROW_FIELD, NAME_COL)
     .build();
 
   public ExperimentMetaTable(IndexedTable table) {
@@ -154,7 +146,8 @@ public class ExperimentMetaTable extends CountTable<IndexedTable> {
       .add(DESC_COL, experiment.getDescription())
       .add(SRCPATH_COL, experiment.getSrcpath())
       .add(OUTCOME_COL, experiment.getOutcome())
-      .add(OUTCOME_TYPE_COL, experiment.getOutcomeType());
+      .add(OUTCOME_TYPE_COL, experiment.getOutcomeType())
+      .add(DIRECTIVES_COL, GSON.toJson(experiment.getDirectives()));
     table.put(put);
 
     if (isNewExperiment) {
@@ -164,6 +157,7 @@ public class ExperimentMetaTable extends CountTable<IndexedTable> {
 
   private Experiment fromRow(Row row) {
     return new Experiment(row.getString(NAME_COL), row.getString(DESC_COL), row.getString(SRCPATH_COL),
-                          row.getString(OUTCOME_COL), row.getString(OUTCOME_TYPE_COL));
+                          row.getString(OUTCOME_COL), row.getString(OUTCOME_TYPE_COL),
+                          GSON.fromJson(row.getString(DIRECTIVES_COL), LIST_TYPE));
   }
 }

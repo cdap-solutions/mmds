@@ -20,6 +20,8 @@ import co.cask.cdap.api.data.schema.Schema;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,19 +37,21 @@ public class Experiment {
   private final String srcpath;
   private final String outcome;
   private final String outcomeType;
-
+  private final List<String> directives;
 
   public Experiment(String name, Experiment experiment) {
     this(name, experiment.getDescription(), experiment.getSrcpath(),
-         experiment.getOutcome(), experiment.getOutcomeType());
+         experiment.getOutcome(), experiment.getOutcomeType(), experiment.getDirectives());
   }
 
-  public Experiment(String name, String description, String srcpath, String outcome, String outcomeType) {
+  public Experiment(String name, String description, String srcpath, String outcome, String outcomeType,
+                    List<String> directives) {
     this.name = name;
     this.description = description == null ? "" : description;
     this.srcpath = srcpath;
     this.outcome = outcome;
     this.outcomeType = outcomeType;
+    this.directives = Collections.unmodifiableList(directives);
   }
 
   public String getName() {
@@ -68,6 +72,10 @@ public class Experiment {
 
   public String getOutcomeType() {
     return outcomeType;
+  }
+
+  public List<String> getDirectives() {
+    return directives == null ? Collections.emptyList() : directives;
   }
 
   public void validate() {
@@ -107,12 +115,13 @@ public class Experiment {
       Objects.equals(description, that.description) &&
       Objects.equals(srcpath, that.srcpath) &&
       Objects.equals(outcome, that.outcome) &&
-      Objects.equals(outcomeType, that.outcomeType);
+      Objects.equals(outcomeType, that.outcomeType) &&
+      Objects.equals(directives, that.directives);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, description, srcpath, outcome, outcomeType);
+    return Objects.hash(name, description, srcpath, outcome, outcomeType, directives);
   }
 
   @Override
@@ -123,6 +132,7 @@ public class Experiment {
       ", srcpath='" + srcpath + '\'' +
       ", outcome='" + outcome + '\'' +
       ", outcomeType='" + outcomeType + '\'' +
+      ", directives=" + directives +
       '}';
   }
 }
