@@ -101,14 +101,15 @@ public class StoreTest extends TestBaseWithSpark2 {
     String experiment1Name = "exp123";
     Assert.assertNull(experimentsTable.get(experiment1Name));
 
-    Experiment experiment1 = new Experiment(experiment1Name, "desc", "src", "outcome", "string", "work1");
+    Experiment experiment1 = new Experiment(experiment1Name, "desc", "src", "outcome", "string",
+                                            Collections.emptyList());
     experimentsTable.put(experiment1);
 
     Assert.assertEquals(experiment1, experimentsTable.get(experiment1Name));
     Assert.assertEquals(ImmutableList.of(experiment1), experimentsTable.list(0, 2).getExperiments());
 
     String experiment2Name = "exp456";
-    Experiment experiment2 = new Experiment(experiment2Name, "d", "s", "o", "string", "work2");
+    Experiment experiment2 = new Experiment(experiment2Name, "d", "s", "o", "string", Collections.emptyList());
     experimentsTable.put(experiment2);
 
     Assert.assertEquals(experiment2, experimentsTable.get(experiment2Name));
@@ -137,8 +138,8 @@ public class StoreTest extends TestBaseWithSpark2 {
 
   @Test
   public void testModelsTable() throws Exception {
-    Experiment experiment1 = new Experiment("e1", "", "path", "o1", "string", "workspace");
-    Experiment experiment2 = new Experiment("e2", "", "path", "o1", "string", "workspace");
+    Experiment experiment1 = new Experiment("e1", "", "path", "o1", "string", Collections.emptyList());
+    Experiment experiment2 = new Experiment("e2", "", "path", "o1", "string", Collections.emptyList());
 
     Assert.assertNull(modelTable.get(new ModelKey(experiment1.getName(), "abc")));
     Assert.assertTrue(modelTable.list(experiment1.getName(), 0, 10, new SortInfo(SortType.ASC)).getModels().isEmpty());
@@ -250,23 +251,24 @@ public class StoreTest extends TestBaseWithSpark2 {
     String experiment1Name = "abc123";
     Assert.assertNull(experimentsTable.get(experiment1Name));
 
-    Experiment experiment1 = new Experiment(experiment1Name, "desc", "src", "outcome", "string", "work1");
+    Experiment experiment1 = new Experiment(experiment1Name, "desc", "src", "outcome", "string",
+                                            Collections.emptyList());
     experimentsTable.put(experiment1);
 
     String experiment2Name = "abd345";
-    Experiment experiment2 = new Experiment(experiment2Name, "d", "s", "o", "string", "work2");
+    Experiment experiment2 = new Experiment(experiment2Name, "d", "s", "o", "string", Collections.emptyList());
     experimentsTable.put(experiment2);
 
     String experiment3Name = "bda345";
-    Experiment experiment3 = new Experiment(experiment3Name, "d", "s", "o", "string", "work2");
+    Experiment experiment3 = new Experiment(experiment3Name, "d", "s", "o", "string", Collections.emptyList());
     experimentsTable.put(experiment3);
 
     String experiment4Name = "zsd345";
-    Experiment experiment4 = new Experiment(experiment4Name, "d", "s", "o", "string", "work2");
+    Experiment experiment4 = new Experiment(experiment4Name, "d", "s", "o", "string", Collections.emptyList());
     experimentsTable.put(experiment4);
 
     String experiment5Name = "yea345";
-    Experiment experiment5 = new Experiment(experiment5Name, "d", "s", "o", "string", "work2");
+    Experiment experiment5 = new Experiment(experiment5Name, "d", "s", "o", "string", Collections.emptyList());
     experimentsTable.put(experiment5);
 
     Assert.assertEquals(experimentsTable.list(0, 50).getTotalRowCount(), 5L);
@@ -308,7 +310,7 @@ public class StoreTest extends TestBaseWithSpark2 {
   @Test
   public void testModelLifecycle() throws Exception {
     // create an experiment
-    Experiment experiment = new Experiment("re", "desc", "srcpath", "outcome", "string", "workspace");
+    Experiment experiment = new Experiment("re", "desc", "srcpath", "outcome", "string", Collections.emptyList());
     store.putExperiment(experiment);
     flush();
 

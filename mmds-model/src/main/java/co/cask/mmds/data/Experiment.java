@@ -20,6 +20,8 @@ import co.cask.cdap.api.data.schema.Schema;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,22 +37,21 @@ public class Experiment {
   private final String srcpath;
   private final String outcome;
   private final String outcomeType;
-  private final String workspaceId;
-
+  private final List<String> directives;
 
   public Experiment(String name, Experiment experiment) {
     this(name, experiment.getDescription(), experiment.getSrcpath(),
-         experiment.getOutcome(), experiment.getOutcomeType(), experiment.getWorkspaceId());
+         experiment.getOutcome(), experiment.getOutcomeType(), experiment.getDirectives());
   }
 
-  public Experiment(String name, String description, String srcpath,
-                    String outcome, String outcomeType, String workspaceId) {
+  public Experiment(String name, String description, String srcpath, String outcome, String outcomeType,
+                    List<String> directives) {
     this.name = name;
     this.description = description == null ? "" : description;
     this.srcpath = srcpath;
     this.outcome = outcome;
     this.outcomeType = outcomeType;
-    this.workspaceId = workspaceId;
+    this.directives = Collections.unmodifiableList(directives);
   }
 
   public String getName() {
@@ -73,8 +74,8 @@ public class Experiment {
     return outcomeType;
   }
 
-  public String getWorkspaceId() {
-    return workspaceId;
+  public List<String> getDirectives() {
+    return directives == null ? Collections.emptyList() : directives;
   }
 
   public void validate() {
@@ -97,9 +98,6 @@ public class Experiment {
       throw new IllegalArgumentException(String.format("Experiment outcomeType '%s' is invalid. Must be one of '%s'.",
                                                        outcomeType, Joiner.on(',').join(VALID_TYPES)));
     }
-    if (workspaceId == null || workspaceId.isEmpty()) {
-      throw new IllegalArgumentException("Experiment workspaceId must be provided.");
-    }
   }
 
   @Override
@@ -118,12 +116,12 @@ public class Experiment {
       Objects.equals(srcpath, that.srcpath) &&
       Objects.equals(outcome, that.outcome) &&
       Objects.equals(outcomeType, that.outcomeType) &&
-      Objects.equals(workspaceId, that.workspaceId);
+      Objects.equals(directives, that.directives);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, description, srcpath, outcome, outcomeType, workspaceId);
+    return Objects.hash(name, description, srcpath, outcome, outcomeType, directives);
   }
 
   @Override
@@ -134,7 +132,7 @@ public class Experiment {
       ", srcpath='" + srcpath + '\'' +
       ", outcome='" + outcome + '\'' +
       ", outcomeType='" + outcomeType + '\'' +
-      ", workspaceId='" + workspaceId + '\'' +
+      ", directives=" + directives +
       '}';
   }
 }

@@ -165,7 +165,7 @@ public class PipelineTest extends HydratorTestBase {
   public void testClassifier() throws Exception {
     String srcPath = getClass().getClassLoader().getResource("HR.csv").getPath();
     Experiment experiment = new Experiment("HR", "employee turnover", srcPath, "left",
-                                           Schema.Type.BOOLEAN.name(), "workspace0");
+                                           Schema.Type.BOOLEAN.name(), Collections.emptyList());
     putExperiment(experiment);
 
     Schema schema = Schema.recordOf(
@@ -275,7 +275,7 @@ public class PipelineTest extends HydratorTestBase {
   public void testRegressor() throws Exception {
     String srcPath = getClass().getClassLoader().getResource("sales.txt").getPath();
     Experiment experiment = new Experiment("re", "real estate", srcPath, "price",
-                                           Schema.Type.DOUBLE.name(), "workspace1");
+                                           Schema.Type.DOUBLE.name(), Collections.emptyList());
     putExperiment(experiment);
 
     Schema schema = Schema.recordOf(
@@ -415,7 +415,7 @@ public class PipelineTest extends HydratorTestBase {
   @Test
   public void testSplitter() throws Exception {
     Experiment experiment = new Experiment("exid", "some experiment", "dummypath", "price",
-                                           Schema.Type.DOUBLE.name(), "workspace1");
+                                           Schema.Type.DOUBLE.name(), Collections.emptyList());
     putExperiment(experiment);
 
     Schema schema = Schema.recordOf(
