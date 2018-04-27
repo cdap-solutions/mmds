@@ -227,10 +227,13 @@ public class ExperimentStore {
     SplitKey splitKey = new SplitKey(key.getExperiment(), meta.getSplit());
     DataSplitStats splitInfo = getSplit(splitKey);
 
+    String predictionsDS = trainRequest.getPredictionsDataset() == null ? key.getExperiment() + "_" + meta.getName() :
+      trainRequest.getPredictionsDataset();
     meta = ModelMeta.builder(meta)
       .setStatus(ModelStatus.TRAINING)
       .setAlgorithm(trainRequest.getAlgorithm())
       .setHyperParameters(trainRequest.getHyperparameters())
+      .setPredictionsDataset(predictionsDS)
       .build();
 
     return new ModelTrainerInfo(experiment, splitInfo, key.getModel(), meta);
