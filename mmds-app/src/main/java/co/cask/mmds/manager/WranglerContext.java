@@ -11,6 +11,7 @@ import co.cask.cdap.etl.api.StageMetrics;
 import co.cask.cdap.etl.api.TransformContext;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -137,7 +138,7 @@ public class WranglerContext implements TransformContext {
 
       @Override
       public Iterator<Map.Entry<String, String>> iterator() {
-        return null;
+        return Collections.emptyIterator();
       }
     };
   }
