@@ -259,7 +259,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/experiments/{experiment-name}/models/{model-id}")
   public void getModel(HttpServiceRequest request, HttpServiceResponder responder,
                        @PathParam("experiment-name") String experimentName,
-                       @PathParam("model-id") String modelId) throws Exception {
+                       @PathParam("model-id") String modelId) {
     final ModelKey modelKey = new ModelKey(experimentName, modelId);
     runInTx(responder, store -> responder.sendString(GSON.toJson(store.getModel(modelKey))));
   }
@@ -268,18 +268,18 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/experiments/{experiment-name}/models/{model-id}/status")
   public void getModelStatus(HttpServiceRequest request, HttpServiceResponder responder,
                              @PathParam("experiment-name") String experimentName,
-                             @PathParam("model-id") String modelId) throws Exception {
+                             @PathParam("model-id") String modelId) {
     final ModelKey modelKey = new ModelKey(experimentName, modelId);
     runInTx(responder, store -> {
       ModelMeta meta = store.getModel(modelKey);
-      responder.sendString(meta.getStatus().name());
+      responder.sendString(GSON.toJson(meta.getStatus()));
     });
   }
 
   @POST
   @Path("/experiments/{experiment-name}/models")
   public void addModel(HttpServiceRequest request, HttpServiceResponder responder,
-                       @PathParam("experiment-name") final String experimentName) throws Exception {
+                       @PathParam("experiment-name") final String experimentName) {
     runInTx(responder, store -> {
       try {
         CreateModelRequest createRequest =
@@ -302,7 +302,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/experiments/{experiment-name}/models/{model-id}/directives")
   public void setModelDirectives(HttpServiceRequest request, HttpServiceResponder responder,
                                  @PathParam("experiment-name") final String experimentName,
-                                 @PathParam("model-id") final String modelId) throws Exception {
+                                 @PathParam("model-id") final String modelId) {
     runInTx(responder, store -> {
       DirectivesRequest directives = GSON.fromJson(Bytes.toString(request.getContent()), DirectivesRequest.class);
       if (directives == null) {
@@ -318,7 +318,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/experiments/{experiment-name}/models/{model-id}/split")
   public void createModelSplit(HttpServiceRequest request, HttpServiceResponder responder,
                                @PathParam("experiment-name") final String experimentName,
-                               @PathParam("model-id") final String modelId) throws Exception {
+                               @PathParam("model-id") final String modelId) {
 
     DataSplitInfo dataSplitInfo = callInTx(responder, store -> {
       try {
@@ -359,7 +359,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/experiments/{experiment-name}/models/{model-id}/split")
   public void unassignModelSplit(HttpServiceRequest request, HttpServiceResponder responder,
                                  @PathParam("experiment-name") final String experimentName,
-                                 @PathParam("model-id") final String modelId) throws Exception {
+                                 @PathParam("model-id") final String modelId) {
     runInTx(responder, store -> {
       store.unassignModelSplit(new ModelKey(experimentName, modelId));
       responder.sendStatus(200);
@@ -370,7 +370,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Path("/experiments/{experiment-name}/models/{model-id}/train")
   public void trainModel(HttpServiceRequest request, HttpServiceResponder responder,
                          @PathParam("experiment-name") final String experimentName,
-                         @PathParam("model-id") final String modelId) throws Exception {
+                         @PathParam("model-id") final String modelId) {
     ModelTrainerInfo trainerInfo = callInTx(responder, store -> {
       try {
         TrainModelRequest trainRequest = GSON.fromJson(Bytes.toString(request.getContent()), TrainModelRequest.class);
@@ -479,7 +479,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @POST
   @Path("/experiments/{experiment-name}/splits")
   public void addSplit(final HttpServiceRequest request, HttpServiceResponder responder,
-                       @PathParam("experiment-name") final String experimentName) throws Exception {
+                       @PathParam("experiment-name") final String experimentName) {
     DataSplitInfo dataSplitInfo = callInTx(responder, store -> {
       try {
         DataSplit splitInfo = GSON.fromJson(Bytes.toString(request.getContent()), DataSplit.class);

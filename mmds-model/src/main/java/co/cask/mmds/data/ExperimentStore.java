@@ -306,7 +306,7 @@ public class ExperimentStore {
     ModelStatus status = modelMeta.getStatus();
     if (status != ModelStatus.PREPARING) {
       throw new ConflictException(String.format(
-        "Directives can only be set or modified if the model is in the %s state.", status));
+        "Directives can only be set or modified if the model is in the %s state.", ModelStatus.PREPARING));
     }
     models.setDirectives(key, directives);
   }
