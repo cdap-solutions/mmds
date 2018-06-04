@@ -87,7 +87,7 @@ public class ExperimentStore {
     while (modelIter.hasNext()) {
       modelMeta = modelIter.next();
       algoHisto.update(modelMeta.getAlgorithm());
-      statusHisto.update(modelMeta.getStatus() == null ? null : modelMeta.getStatus().name());
+      statusHisto.update(modelMeta.getStatus() == null ? null : modelMeta.getStatus().toString());
 
       metrics = modelMeta.getEvaluationMetrics();
       rmse.update(metrics.getRmse());
