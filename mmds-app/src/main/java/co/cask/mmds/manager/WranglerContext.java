@@ -3,6 +3,9 @@ package co.cask.mmds.manager;
 
 import co.cask.cdap.api.ServiceDiscoverer;
 import co.cask.cdap.api.data.schema.Schema;
+import co.cask.cdap.api.metadata.Metadata;
+import co.cask.cdap.api.metadata.MetadataEntity;
+import co.cask.cdap.api.metadata.MetadataScope;
 import co.cask.cdap.api.plugin.PluginContext;
 import co.cask.cdap.api.plugin.PluginProperties;
 import co.cask.cdap.etl.api.Arguments;
@@ -12,12 +15,12 @@ import co.cask.cdap.etl.api.TransformContext;
 
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 // TODO: remove usage of Hydrator classes. Requires wrangler work
+
 /**
  * Implements TransformContext required by the WranglerTransform.
  */
@@ -108,7 +111,7 @@ public class WranglerContext implements TransformContext {
 
   @Override
   public Map<String, Schema> getInputSchemas() {
-    return new HashMap<>();
+    return Collections.emptyMap();
   }
 
   @Nullable
@@ -119,7 +122,7 @@ public class WranglerContext implements TransformContext {
 
   @Override
   public Map<String, Schema> getOutputPortSchemas() {
-    return new HashMap<>();
+    return Collections.emptyMap();
   }
 
   @Override
@@ -153,5 +156,55 @@ public class WranglerContext implements TransformContext {
   @Override
   public URL getServiceURL(String serviceId) {
     return serviceDiscoverer.getServiceURL(serviceId);
+  }
+
+  @Override
+  public Map<MetadataScope, Metadata> getMetadata(MetadataEntity metadataEntity) {
+    return Collections.emptyMap();
+  }
+
+  @Override
+  public Metadata getMetadata(MetadataScope metadataScope, MetadataEntity metadataEntity) {
+    return new Metadata(Collections.emptyMap(), Collections.emptySet());
+  }
+
+  @Override
+  public void addProperties(MetadataEntity metadataEntity, Map<String, String> map) {
+    // no-op
+  }
+
+  @Override
+  public void addTags(MetadataEntity metadataEntity, String... strings) {
+    // no-op
+  }
+
+  @Override
+  public void addTags(MetadataEntity metadataEntity, Iterable<String> iterable) {
+    // no-op
+  }
+
+  @Override
+  public void removeMetadata(MetadataEntity metadataEntity) {
+    // no-op
+  }
+
+  @Override
+  public void removeProperties(MetadataEntity metadataEntity) {
+    // no-op
+  }
+
+  @Override
+  public void removeProperties(MetadataEntity metadataEntity, String... strings) {
+    // no-op
+  }
+
+  @Override
+  public void removeTags(MetadataEntity metadataEntity) {
+    // no-op
+  }
+
+  @Override
+  public void removeTags(MetadataEntity metadataEntity, String... strings) {
+    // no-op
   }
 }
