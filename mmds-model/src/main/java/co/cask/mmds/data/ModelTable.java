@@ -53,6 +53,7 @@ public class ModelTable extends CountTable<IndexedTable> {
   private static final String DEPLOY_TIME_COL = "deploytime";
   private static final String STATUS_COL = "status";
   private static final String DIRECTIVES_COL = "directives";
+  private static final String PREDICTIONS_COL = "predictions";
   // evaluation metric columns
   private static final String PRECISION_COL = "precision";
   private static final String RECALL_COL = "recall";
@@ -270,6 +271,9 @@ public class ModelTable extends CountTable<IndexedTable> {
       .add(ALGO_COL, trainRequest.getAlgorithm())
       .add(HYPER_PARAMS_COL, GSON.toJson(trainRequest.getHyperparameters()))
       .add(STATUS_COL, ModelStatus.TRAINING.name());
+    if (trainRequest.getPredictionsDataset() != null) {
+      put.add(PREDICTIONS_COL, trainRequest.getPredictionsDataset());
+    }
     table.put(put);
   }
 
@@ -344,6 +348,7 @@ public class ModelTable extends CountTable<IndexedTable> {
       .setDeployTime(row.getLong(DEPLOY_TIME_COL, -1))
       .setEvaluationMetrics(evaluationMetrics)
       .setDirectives(directives)
+      .setPredictionsDataset(row.getString(PREDICTIONS_COL))
       .build();
   }
 
