@@ -229,8 +229,9 @@ public class ExperimentStore {
 
     meta = ModelMeta.builder(meta)
       .setStatus(ModelStatus.TRAINING)
-      .setAlgorithm(trainRequest.getAlgorithm())
-      .setHyperParameters(trainRequest.getHyperparameters())
+      .setAlgorithm(requestWithDefaults.getAlgorithm())
+      .setHyperParameters(requestWithDefaults.getHyperparameters())
+      .setPredictionsDataset(requestWithDefaults.getPredictionsDataset())
       .build();
 
     return new ModelTrainerInfo(experiment, splitInfo, key.getModel(), meta);
