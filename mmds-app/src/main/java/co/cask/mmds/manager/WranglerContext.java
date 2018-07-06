@@ -12,10 +12,12 @@ import co.cask.cdap.etl.api.Arguments;
 import co.cask.cdap.etl.api.Lookup;
 import co.cask.cdap.etl.api.StageMetrics;
 import co.cask.cdap.etl.api.TransformContext;
+import co.cask.cdap.etl.api.lineage.field.Operation;
 
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -205,6 +207,11 @@ public class WranglerContext implements TransformContext {
 
   @Override
   public void removeTags(MetadataEntity metadataEntity, String... strings) {
+    // no-op
+  }
+
+  @Override
+  public void record(List<Operation> list) {
     // no-op
   }
 }
