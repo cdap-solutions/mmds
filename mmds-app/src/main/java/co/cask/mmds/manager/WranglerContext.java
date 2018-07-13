@@ -12,7 +12,7 @@ import co.cask.cdap.etl.api.Arguments;
 import co.cask.cdap.etl.api.Lookup;
 import co.cask.cdap.etl.api.StageMetrics;
 import co.cask.cdap.etl.api.TransformContext;
-import co.cask.cdap.etl.api.lineage.field.Operation;
+import co.cask.cdap.etl.api.lineage.field.PipelineOperation;
 
 import java.net.URL;
 import java.util.Collections;
@@ -211,7 +211,7 @@ public class WranglerContext implements TransformContext {
   }
 
   @Override
-  public void record(List<Operation> list) {
+  public void record(List<PipelineOperation> pipelineOperations) {
     // no-op
   }
 }
