@@ -3,15 +3,22 @@ package co.cask.mmds.plugin;
 import co.cask.cdap.api.annotation.Description;
 import co.cask.cdap.api.annotation.Macro;
 import co.cask.cdap.api.data.schema.Schema;
-import co.cask.mmds.modeler.MLConf;
-
+import co.cask.cdap.api.plugin.PluginConfig;
 import java.io.IOException;
 
 /**
  * ML Predictor configuration.
  */
 @SuppressWarnings("unused")
-public class PredictorConf extends MLConf {
+public class PredictorConf extends PluginConfig {
+
+  @Macro
+  @Description("The ID of the experiment the model belongs to.")
+  private String experimentId;
+
+  @Macro
+  @Description("The ID of the model to use for predictions. Model IDs are unique within an experiment.")
+  private String modelId;
 
   @Macro
   @Description("The field in the output schema to place the prediction. Must be a double for regression models. " +
@@ -36,6 +43,14 @@ public class PredictorConf extends MLConf {
     return predictionField;
   }
 
+  public String getExperimentID() {
+    return experimentId;
+  }
+
+  public String getModelID() {
+    return modelId;
+  }
+
   public Schema getOutputSchema() {
     try {
       return Schema.parseJson(schema);
@@ -45,8 +60,6 @@ public class PredictorConf extends MLConf {
   }
 
   public void validate(Schema inputSchema) {
-    super.validate();
-
     boolean outputSchemaIsMacro = containsMacro("outputSchema");
     boolean predictionFieldIsMacro = containsMacro("predictionField");
 
