@@ -86,7 +86,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     predictionType = predictionSchema.getType();
 
     // verify that the features used to train the model are present in the input.
-    IndexedTable modelTable = context.getDataset(conf.getModelMetaDataset());
+    IndexedTable modelTable = context.getDataset(Constants.Dataset.MODEL_META);
     ModelTable modelMetaTable = new ModelTable(modelTable);
     ModelKey key = new ModelKey(conf.getExperimentID(), conf.getModelID());
     ModelMeta meta = modelMetaTable.get(key);
@@ -121,7 +121,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     }
 
     // validate that the actual files are there
-    FileSet modelFiles = context.getDataset(conf.getModelDataset());
+    FileSet modelFiles = context.getDataset(Constants.Dataset.MODEL_COMPONENTS);
     featuregenPath = getComponentPath(modelFiles, Constants.Component.FEATUREGEN);
     if (featuregenPath == null) {
       throw new IllegalArgumentException(

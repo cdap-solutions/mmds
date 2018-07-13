@@ -20,16 +20,6 @@
           "widget-type": "textbox",
           "label": "Prediction Field",
           "name": "predictionField"
-        },
-        {
-          "widget-type": "textbox",
-          "label": "Model Dataset",
-          "name": "modelDataset"
-        },
-        {
-          "widget-type": "textbox",
-          "label": "Model MetaData Dataset",
-          "name": "modelMetaDataset"
         }
       ]
     }

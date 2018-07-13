@@ -30,9 +30,3 @@ Otherwise, it should be of type double.
 
 **schema:** The output schema, which must include the prediction field.
 Must only contain fields from the input schema and the new prediction field.
-
-**modelDataset:** The name of the fileset that stores trained models. Defaults to 'models'.
-This should be set to the same value used by the ModelTrainer that trained the model.
-
-**modelMetaDataset:** The name of the table that stores model metadata. Defaults to 'modelmeta'.
-This should be set to the same value used by the ModelTrainer that trained the model.
