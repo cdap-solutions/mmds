@@ -192,7 +192,6 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     Dataset<Row> featureData = featureGenerator.generateFeatures(rawData, extraFields);
     // make predictions
     Dataset predictions = model.transform(featureData);
-    predictions.show();
 
     if (modeler.getAlgorithm().getType() == AlgorithmType.CLASSIFICATION && predictionType == Schema.Type.STRING) {
       StringIndexerModel indexerModel = StringIndexerModel.load(targetIndexPath);

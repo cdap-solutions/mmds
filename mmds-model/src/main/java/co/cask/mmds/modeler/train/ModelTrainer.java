@@ -138,7 +138,6 @@ public class ModelTrainer {
     LOG.info("Generating predictions on test data.");
     Dataset predictions = model.transform(testFeatures);
     LOG.info("Predictions successfully generated.");
-    predictions.show();
 
     LOG.info("Calculating evaluation metrics...");
     RDD<Tuple2<Object, Object>> predictionAndLabels =
