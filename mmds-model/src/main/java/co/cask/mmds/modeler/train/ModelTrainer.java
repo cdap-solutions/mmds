@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.ml.PredictionModel;
 import org.apache.spark.ml.Predictor;
+import org.apache.spark.ml.feature.IndexToString;
 import org.apache.spark.ml.feature.StringIndexer;
 import org.apache.spark.ml.feature.StringIndexerModel;
 import org.apache.spark.ml.linalg.Vector;
@@ -106,7 +107,9 @@ public class ModelTrainer {
     // if the outcome is categorical, index the values
     String finalOutcomeField = outcomeField;
     StringIndexerModel targetIndexModel = null;
-    if (isCategorical(outcomeType)) {
+    boolean isCategoricalOutput = isCategorical(outcomeType);
+    String numericPredictionField = Constants.TRAINER_PREDICTION_FIELD;
+    if (isCategoricalOutput) {
       String strOutcomeField = outcomeField;
       // StringIndexer doesn't do boolean, have to turn them into strings
       if (outcomeType == Schema.Type.BOOLEAN) {
@@ -124,13 +127,14 @@ public class ModelTrainer {
       targetIndexModel = targetIndexer.fit(trainingFeatures);
       trainingFeatures = targetIndexModel.transform(trainingFeatures);
       testFeatures = targetIndexModel.transform(testFeatures);
+      numericPredictionField = "_n_" + numericPredictionField;
     }
 
     Modeler modeler = Modelers.getModeler(algorithm);
     Predictor<Vector, ?, ? extends PredictionModel> predictor = modeler.createPredictor(trainingParams);
     predictor.setLabelCol(finalOutcomeField);
     predictor.setFeaturesCol(Constants.FEATURES_FIELD);
-    predictor.setPredictionCol(Constants.TRAINER_PREDICTION_FIELD);
+    predictor.setPredictionCol(numericPredictionField);
 
     LOG.info("Training model...");
     PredictionModel model = predictor.fit(trainingFeatures);
@@ -139,9 +143,20 @@ public class ModelTrainer {
     Dataset predictions = model.transform(testFeatures);
     LOG.info("Predictions successfully generated.");
 
+    // reverse map categorical predictions so that they have the original value and not some number
+    // that nobody knows how to interpret
+    if (isCategorical(outcomeType)) {
+      String[] labels = targetIndexModel.labels();
+      IndexToString reverseIndex = new IndexToString()
+        .setLabels(labels)
+        .setInputCol(numericPredictionField)
+        .setOutputCol(Constants.TRAINER_PREDICTION_FIELD);
+      predictions = reverseIndex.transform(predictions);
+    }
+
     LOG.info("Calculating evaluation metrics...");
     RDD<Tuple2<Object, Object>> predictionAndLabels =
-      predictions.select(new Column(Constants.TRAINER_PREDICTION_FIELD),
+      predictions.select(new Column(numericPredictionField),
                          new Column(finalOutcomeField).cast(DataTypes.DoubleType))
         .toJavaRDD()
         .map(new PredictionLabelFunction()).rdd();
@@ -173,12 +188,11 @@ public class ModelTrainer {
                                    "as there is a unique value for each record.", e);
     }
 
-    Column[] columns = new Column[featureGenerator.getFeatures().size() + 2];
+    Column[] columns = new Column[schema.getFields().size() + 1];
     columns[0] = new Column(Constants.TRAINER_PREDICTION_FIELD);
-    columns[1] = new Column(outcomeField);
-    int i = 2;
-    for (String feature : featureGenerator.getFeatures()) {
-      columns[i] = new Column(feature);
+    int i = 1;
+    for (Schema.Field field : schema.getFields()) {
+      columns[i] = new Column(field.getName());
       i++;
     }
     Dataset predictionsClean = predictions.select(columns);
