@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2017-2018 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package co.cask.mmds.plugin;
 
 import co.cask.cdap.api.annotation.Description;
@@ -86,7 +102,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     predictionType = predictionSchema.getType();
 
     // verify that the features used to train the model are present in the input.
-    IndexedTable modelTable = context.getDataset(conf.getModelMetaDataset());
+    IndexedTable modelTable = context.getDataset(Constants.Dataset.MODEL_META);
     ModelTable modelMetaTable = new ModelTable(modelTable);
     ModelKey key = new ModelKey(conf.getExperimentID(), conf.getModelID());
     ModelMeta meta = modelMetaTable.get(key);
@@ -121,7 +137,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
     }
 
     // validate that the actual files are there
-    FileSet modelFiles = context.getDataset(conf.getModelDataset());
+    FileSet modelFiles = context.getDataset(Constants.Dataset.MODEL_COMPONENTS);
     featuregenPath = getComponentPath(modelFiles, Constants.Component.FEATUREGEN);
     if (featuregenPath == null) {
       throw new IllegalArgumentException(
