@@ -19,6 +19,7 @@ package co.cask.mmds.modeler.param;
 import co.cask.mmds.spec.DoubleParam;
 import co.cask.mmds.spec.ParamSpec;
 import co.cask.mmds.spec.Parameters;
+import co.cask.mmds.spec.Params;
 import co.cask.mmds.spec.Range;
 import co.cask.mmds.spec.StringParam;
 import com.google.common.collect.ImmutableSet;
@@ -49,11 +50,11 @@ public class NaiveBayesParams implements Parameters {
 
   @Override
   public Map<String, String> toMap() {
-    return co.cask.mmds.spec.Params.putParams(new HashMap<String, String>(), smoothing, type);
+    return Params.putParams(new HashMap<>(), smoothing, type);
   }
 
   @Override
   public List<ParamSpec> getSpec() {
-    return co.cask.mmds.spec.Params.addParams(new ArrayList<ParamSpec>(), smoothing, type);
+    return Params.addParams(new ArrayList<>(), smoothing, type);
   }
 }

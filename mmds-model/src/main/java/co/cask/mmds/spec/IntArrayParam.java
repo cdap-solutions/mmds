@@ -16,7 +16,9 @@
 
 package co.cask.mmds.spec;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * An integer Modeler parameter.
@@ -63,5 +65,10 @@ public class IntArrayParam extends Param<int[]> {
   @Override
   public ParamSpec getSpec() {
     return spec;
+  }
+
+  @Override
+  public String getValStr() {
+    return Arrays.stream(getVal()).boxed().map(x -> Integer.toString(x)).collect(Collectors.joining(","));
   }
 }
