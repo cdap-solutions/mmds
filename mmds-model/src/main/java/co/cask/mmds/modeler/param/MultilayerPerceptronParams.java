@@ -21,6 +21,7 @@ import co.cask.mmds.spec.IntArrayParam;
 import co.cask.mmds.spec.IntParam;
 import co.cask.mmds.spec.ParamSpec;
 import co.cask.mmds.spec.Parameters;
+import co.cask.mmds.spec.Params;
 import co.cask.mmds.spec.Range;
 import co.cask.mmds.spec.StringParam;
 import com.google.common.collect.ImmutableSet;
@@ -84,11 +85,11 @@ public class MultilayerPerceptronParams implements Parameters {
 
   @Override
   public Map<String, String> toMap() {
-    return co.cask.mmds.spec.Params.putParams(new HashMap<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
+    return Params.putParams(new HashMap<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
   }
 
   @Override
   public List<ParamSpec> getSpec() {
-    return co.cask.mmds.spec.Params.addParams(new ArrayList<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
+    return Params.addParams(new ArrayList<>(), blockSize, maxIterations, tolerance, stepSize, solver, layers);
   }
 }

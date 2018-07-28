@@ -16,8 +16,6 @@
 
 package co.cask.mmds.spec;
 
-import co.cask.mmds.spec.ParamSpec;
-
 import java.util.List;
 import java.util.Map;
 
