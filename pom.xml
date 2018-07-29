@@ -24,7 +24,8 @@
   <packaging>pom</packaging>
 
   <name>Model Management and Distribution Services</name>
-
+  <description>Interactive, UI driven approach to machine learning</description>
+  <url>http://github.com/cask-solutions/mmds</url>
   <modules>
     <module>mmds-app</module>
     <module>mmds-model</module>
