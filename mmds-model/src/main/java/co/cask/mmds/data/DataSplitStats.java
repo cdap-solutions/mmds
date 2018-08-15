@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
@@ -37,10 +38,12 @@ public class DataSplitStats extends DataSplit {
   private final SplitStatus status;
   private final List<ColumnSplitStats> stats;
   private final Set<String> models;
+  private final long start;
+  private final long end;
 
   public DataSplitStats(String id, String description, String type, Map<String, String> params, List<String> directives,
                         Schema schema, String trainingPath, String testPath, SplitStatus status,
-                        List<ColumnSplitStats> stats, Set<String> models) {
+                        List<ColumnSplitStats> stats, Set<String> models, long start, long end) {
     super(description, type, params, directives, schema);
     this.id = id;
     this.trainingPath = trainingPath;
@@ -48,6 +51,8 @@ public class DataSplitStats extends DataSplit {
     this.status = status;
     this.stats = stats;
     this.models = Collections.unmodifiableSet(models);
+    this.start = start;
+    this.end = end;
   }
 
   public String getId() {
@@ -76,6 +81,14 @@ public class DataSplitStats extends DataSplit {
     return models;
   }
 
+  public long getStart() {
+    return start;
+  }
+
+  public long getEnd() {
+    return end;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -87,20 +100,20 @@ public class DataSplitStats extends DataSplit {
     if (!super.equals(o)) {
       return false;
     }
-
     DataSplitStats that = (DataSplitStats) o;
-
-    return Objects.equals(id, that.id) &&
+    return start == that.start &&
+      end == that.end &&
+      Objects.equals(id, that.id) &&
       Objects.equals(trainingPath, that.trainingPath) &&
       Objects.equals(testPath, that.testPath) &&
-      Objects.equals(status, that.status) &&
+      status == that.status &&
       Objects.equals(stats, that.stats) &&
       Objects.equals(models, that.models);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, trainingPath, testPath, status, stats, models);
+    return Objects.hash(super.hashCode(), id, trainingPath, testPath, status, stats, models, start, end);
   }
 
   /**
@@ -120,11 +133,15 @@ public class DataSplitStats extends DataSplit {
     private SplitStatus status;
     private List<ColumnSplitStats> stats;
     private Set<String> models;
+    private long start;
+    private long end;
 
     public Builder(String id) {
       this.id = id;
       models = new HashSet<>();
       stats = new ArrayList<>();
+      start = -1L;
+      end = -1L;
     }
 
     public Builder setTrainingPath(String trainingPath) {
@@ -154,9 +171,19 @@ public class DataSplitStats extends DataSplit {
       return this;
     }
 
+    public Builder setStartTime(long startMillis) {
+      this.start = startMillis;
+      return this;
+    }
+
+    public Builder setEndTime(long endMillis) {
+      this.end = endMillis;
+      return this;
+    }
+
     public DataSplitStats build() {
       DataSplitStats splitStats = new DataSplitStats(id, description, type, params, directives, schema,
-                                                     trainingPath, testPath, status, stats, models);
+                                                     trainingPath, testPath, status, stats, models, start, end);
       splitStats.validate();
       return splitStats;
     }
@@ -168,9 +195,11 @@ public class DataSplitStats extends DataSplit {
       "id='" + id + '\'' +
       ", trainingPath='" + trainingPath + '\'' +
       ", testPath='" + testPath + '\'' +
-      ", status='" + status + '\'' +
+      ", status=" + status +
       ", stats=" + stats +
       ", models=" + models +
-      "} " + super.toString();
+      ", start=" + start +
+      ", end=" + end +
+      '}';
   }
 }

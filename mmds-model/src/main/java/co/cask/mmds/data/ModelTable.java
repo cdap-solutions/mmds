@@ -65,6 +65,7 @@ public class ModelTable extends CountTable<IndexedTable> {
   private static final String FEATURES_COL = "features";
   private static final String CATEGORICAL_FEATURES_COL = "catfeatures";
   private static final String CREATE_TIME_COL = "createtime";
+  private static final String TRAINING_TIME_COL = "trainingtime";
   private static final String TRAIN_TIME_COL = "trainedtime";
   private static final String DEPLOY_TIME_COL = "deploytime";
   private static final String STATUS_COL = "status";
@@ -148,10 +149,13 @@ public class ModelTable extends CountTable<IndexedTable> {
    */
   public void setStatus(ModelKey key, ModelStatus status) {
     Put put = new Put(getKey(key)).add(STATUS_COL, status.name());
+    long now = System.currentTimeMillis();
     if (status == ModelStatus.DEPLOYED) {
-      put.add(DEPLOY_TIME_COL, System.currentTimeMillis());
+      put.add(DEPLOY_TIME_COL, now);
     } else if (status == ModelStatus.TRAINED) {
-      put.add(TRAIN_TIME_COL, System.currentTimeMillis());
+      put.add(TRAIN_TIME_COL, now);
+    } else if (status == ModelStatus.TRAINING_FAILED) {
+      put.add(TRAIN_TIME_COL, now);
     }
     table.put(put);
   }
@@ -282,11 +286,13 @@ public class ModelTable extends CountTable<IndexedTable> {
     table.delete(getKey(key), Bytes.toBytes(SPLIT_COL));
   }
 
-  public void setTrainingInfo(ModelKey key, TrainModelRequest trainRequest) {
+  public void setTrainingInfo(ModelKey key, TrainModelRequest trainRequest, long trainingTime) {
     Put put = new Put(getKey(key))
       .add(ALGO_COL, trainRequest.getAlgorithm())
       .add(HYPER_PARAMS_COL, GSON.toJson(trainRequest.getHyperparameters()))
-      .add(STATUS_COL, ModelStatus.TRAINING.name());
+      .add(STATUS_COL, ModelStatus.TRAINING.name())
+      .add(TRAINING_TIME_COL, trainingTime)
+      .add(TRAIN_TIME_COL, -1L);
     if (trainRequest.getPredictionsDataset() != null) {
       put.add(PREDICTIONS_COL, trainRequest.getPredictionsDataset());
     }
@@ -361,6 +367,7 @@ public class ModelTable extends CountTable<IndexedTable> {
       .setCategoricalFeatures(categoricalFeatures)
       .setCreateTime(row.getLong(CREATE_TIME_COL, -1))
       .setTrainedTime(row.getLong(TRAIN_TIME_COL, -1))
+      .setTrainingTime(row.getLong(TRAINING_TIME_COL, -1))
       .setDeployTime(row.getLong(DEPLOY_TIME_COL, -1))
       .setEvaluationMetrics(evaluationMetrics)
       .setDirectives(directives)

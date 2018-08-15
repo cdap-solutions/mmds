@@ -62,6 +62,8 @@ public class DataSplitTable {
   private static final String TRAIN_PATH = "train.path";
   private static final String STATS = "stats";
   private static final String STATUS = "status";
+  private static final String START = "start";
+  private static final String END = "end";
   public static final DatasetProperties DATASET_PROPERTIES = PartitionedFileSetProperties.builder()
     .setPartitioning(Partitioning.builder().addStringField(EXPERIMENT).addStringField(SPLIT).build())
     .setEnableExploreOnCreate(false)
@@ -73,7 +75,7 @@ public class DataSplitTable {
     this.splits = splits;
   }
 
-  public String addSplit(String experiment, DataSplit dataSplit) {
+  public String addSplit(String experiment, DataSplit dataSplit, long startTimeMillis) {
     String id = UUID.randomUUID().toString().replaceAll("-", "");
     PartitionKey key = PartitionKey.builder().addStringField(EXPERIMENT, experiment).addStringField(SPLIT, id).build();
     PartitionOutput partitionOutput = splits.getPartitionOutput(key);
@@ -85,6 +87,7 @@ public class DataSplitTable {
     meta.put(DIRECTIVES, GSON.toJson(dataSplit.getDirectives()));
     meta.put(SCHEMA, dataSplit.getSchema().toString());
     meta.put(STATUS, SplitStatus.SPLITTING.name());
+    meta.put(START, Long.toString(startTimeMillis));
 
     partitionOutput.setMetadata(meta);
     partitionOutput.addPartition();
@@ -120,10 +123,11 @@ public class DataSplitTable {
     return partitionDetail.getLocation();
   }
 
-  public void setStatus(SplitKey splitKey, SplitStatus status) {
+  public void splitFailed(SplitKey splitKey, long failedTime) {
     PartitionKey key = getKey(splitKey);
     Map<String, String> updates = new HashMap<>();
-    updates.put(STATUS, status.name());
+    updates.put(STATUS, SplitStatus.FAILED.name());
+    updates.put(END, Long.toString(failedTime));
     splits.setMetadata(key, updates);
   }
 
@@ -157,14 +161,17 @@ public class DataSplitTable {
    * @param trainingPath path to training data
    * @param testPath path to test data
    * @param stats stats about the training and test data
+   * @param endTimeSeconds timestamp in seconds for when the split finished
    */
-  public void updateStats(SplitKey splitKey, String trainingPath, String testPath, List<ColumnSplitStats> stats) {
+  public void updateStats(SplitKey splitKey, String trainingPath, String testPath, List<ColumnSplitStats> stats,
+                          long endTimeSeconds) {
     PartitionKey key = getKey(splitKey);
     Map<String, String> updates = new HashMap<>();
     updates.put(TRAIN_PATH, trainingPath);
     updates.put(TEST_PATH, testPath);
     updates.put(STATS, GSON.toJson(stats));
     updates.put(STATUS, SplitStatus.COMPLETE.name());
+    updates.put(END, Long.toString(endTimeSeconds));
     splits.setMetadata(key, updates);
   }
 
@@ -240,8 +247,14 @@ public class DataSplitTable {
     if (modelsStr != null) {
       models = GSON.fromJson(modelsStr, SET_TYPE);
     }
+    String startStr = meta.get(START);
+    String endStr = meta.get(END);
+    long start = startStr == null ? -1L : Long.parseLong(startStr);
+    long end = endStr == null ? -1L : Long.parseLong(endStr);
 
     DataSplitStats.Builder builder = DataSplitStats.builder(id)
+      .setStartTime(start)
+      .setEndTime(end)
       .setDescription(meta.get(DESCRIPTION))
       .setType(meta.get(TYPE))
       .setParams(params)

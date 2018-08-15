@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
@@ -222,7 +223,7 @@ public class ExperimentStore {
     return modelMeta;
   }
 
-  public ModelTrainerInfo trainModel(ModelKey key, TrainModelRequest trainRequest) {
+  public ModelTrainerInfo trainModel(ModelKey key, TrainModelRequest trainRequest, long trainingTime) {
     Experiment experiment = getExperiment(key.getExperiment());
     ModelMeta meta = getModel(key);
     ModelStatus currentStatus = meta.getStatus();
@@ -238,18 +239,12 @@ public class ExperimentStore {
                                                                   trainRequest.getPredictionsDataset(),
                                                                   parameters.toMap());
 
-    models.setTrainingInfo(key, requestWithDefaults);
+    models.setTrainingInfo(key, requestWithDefaults, trainingTime);
 
     SplitKey splitKey = new SplitKey(key.getExperiment(), meta.getSplit());
     DataSplitStats splitInfo = getSplit(splitKey);
 
-    meta = ModelMeta.builder(meta)
-      .setStatus(ModelStatus.TRAINING)
-      .setAlgorithm(requestWithDefaults.getAlgorithm())
-      .setHyperParameters(requestWithDefaults.getHyperparameters())
-      .setPredictionsDataset(requestWithDefaults.getPredictionsDataset())
-      .build();
-
+    meta = models.get(key);
     return new ModelTrainerInfo(experiment, splitInfo, key.getModel(), meta);
   }
 
@@ -369,7 +364,7 @@ public class ExperimentStore {
     return splits.list(experimentName);
   }
 
-  public DataSplitInfo addSplit(String experimentName, DataSplit splitInfo) {
+  public DataSplitInfo addSplit(String experimentName, DataSplit splitInfo, long startTimeMillis) {
     Experiment experiment = getExperiment(experimentName);
     Schema.Type experimentOutcomeType = Schema.Type.valueOf(experiment.getOutcomeType().toUpperCase());
 
@@ -399,7 +394,7 @@ public class ExperimentStore {
                       experiment.getOutcome(), experimentOutcomeType, splitOutcomeType));
     }
 
-    String splitId = splits.addSplit(experimentName, splitInfo);
+    String splitId = splits.addSplit(experimentName, splitInfo, startTimeMillis);
     Location splitLocation = splits.getLocation(new SplitKey(experimentName, splitId));
     return new DataSplitInfo(splitId, experiment, splitInfo, splitLocation);
   }
@@ -414,22 +409,23 @@ public class ExperimentStore {
     return stats;
   }
 
-  public void finishSplit(SplitKey splitKey, String trainingPath, String testPath, List<ColumnSplitStats> stats) {
-    splits.updateStats(splitKey, trainingPath, testPath, stats);
+  public void finishSplit(SplitKey splitKey, String trainingPath, String testPath, List<ColumnSplitStats> stats,
+                          long endTime) {
+    splits.updateStats(splitKey, trainingPath, testPath, stats, endTime);
     DataSplitStats splitStats = getSplit(splitKey);
     for (String modelId : splitStats.getModels()) {
       models.setStatus(new ModelKey(splitKey.getExperiment(), modelId), ModelStatus.DATA_READY);
     }
   }
 
-  public void splitFailed(SplitKey key) {
+  public void splitFailed(SplitKey key, long failTime) {
     getExperiment(key.getExperiment());
     DataSplitStats splitStats = getSplit(key);
     if (splitStats.getStatus() != SplitStatus.SPLITTING) {
       // should never happen
       throw new IllegalStateException("Cannot transition split to failed state unless it is in the splitting state.");
     }
-    splits.setStatus(key, SplitStatus.FAILED);
+    splits.splitFailed(key, failTime);
     for (String model : splitStats.getModels()) {
       models.setStatus(new ModelKey(key.getExperiment(), model), ModelStatus.SPLIT_FAILED);
     }
