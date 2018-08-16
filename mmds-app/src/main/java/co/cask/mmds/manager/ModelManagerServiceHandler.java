@@ -74,6 +74,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -334,7 +335,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                                     modelMeta.getDirectives(), splitInfo.getSchema());
         }
         splitInfo.validate();
-        DataSplitInfo info = store.addSplit(experimentName, splitInfo);
+        DataSplitInfo info = store.addSplit(experimentName, splitInfo, System.currentTimeMillis());
         store.setModelSplit(modelKey, info.getSplitId());
         return info;
       } catch (JsonParseException e) {
@@ -381,7 +382,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
 
         ModelKey modelKey = new ModelKey(experimentName, modelId);
 
-        return store.trainModel(modelKey, trainRequest);
+        return store.trainModel(modelKey, trainRequest, System.currentTimeMillis());
       } catch (JsonParseException e) {
         throw new BadRequestException(
           String.format("Problem occurred while parsing request for model training for experiment '%s'. " +
@@ -487,7 +488,7 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
           throw new BadRequestException("A request body must be provided containing split parameters.");
         }
         splitInfo.validate();
-        return store.addSplit(experimentName, splitInfo);
+        return store.addSplit(experimentName, splitInfo, System.currentTimeMillis());
       } catch (JsonParseException e) {
         throw new BadRequestException(
           String.format("Problem occurred while parsing request for split creation for experiment '%s'. " +
@@ -604,11 +605,11 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
                                          context.getPluginContext(), context.getServiceDiscoverer())) {
         DataSplitResult result = splitStatsGenerator.split(dataSplitInfo);
         runInTx(store -> store.finishSplit(splitKey, result.getTrainingPath(),
-                                           result.getTestPath(), result.getStats()));
+                                           result.getTestPath(), result.getStats(), System.currentTimeMillis()));
       } catch (Exception e) {
         LOG.error("Error generating split {} in experiment {}.", splitId, experimentName, e);
         try {
-          runInTx(store -> store.splitFailed(splitKey));
+          runInTx(store -> store.splitFailed(splitKey, System.currentTimeMillis()));
         } catch (TransactionFailureException te) {
           LOG.error("Error marking split {} in experiment {} as failed",
                     splitId, experimentName, te);

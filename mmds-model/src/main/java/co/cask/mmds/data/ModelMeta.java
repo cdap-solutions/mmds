@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 public class ModelMeta extends Model {
   private final String id;
   private final long createtime;
+  private final long trainingtime;
   private final long trainedtime;
   private final long deploytime;
   private final ModelStatus status;
@@ -42,8 +43,8 @@ public class ModelMeta extends Model {
   private ModelMeta(String id, String name, String description, String algorithm, String split,
                     @Nullable String predictionsDataset, ModelStatus status, List<String> directives,
                     Map<String, String> hyperparameters, List<String> features, String outcome,
-                    Set<String> categoricalFeatures, long createtime, long trainedtime,
-                    long deploytime, EvaluationMetrics evaluationMetrics) {
+                    Set<String> categoricalFeatures, long createtime, long trainingtime, long trainedtime,
+                    Long deploytime, EvaluationMetrics evaluationMetrics) {
     super(name, description, algorithm, split, predictionsDataset, directives, hyperparameters);
     this.id = id;
     this.status = status;
@@ -51,6 +52,7 @@ public class ModelMeta extends Model {
     this.features = Collections.unmodifiableList(features);
     this.categoricalFeatures = Collections.unmodifiableSet(categoricalFeatures);
     this.createtime = createtime;
+    this.trainingtime = trainingtime;
     this.trainedtime = trainedtime;
     this.deploytime = deploytime;
     this.evaluationMetrics = evaluationMetrics;
@@ -70,6 +72,10 @@ public class ModelMeta extends Model {
 
   public long getCreatetime() {
     return createtime;
+  }
+
+  public long getTrainingtime() {
+    return trainingtime;
   }
 
   public long getTrainedtime() {
@@ -129,6 +135,7 @@ public class ModelMeta extends Model {
   public static Builder builder(ModelMeta meta) {
     return new Builder(meta.id)
       .setCreateTime(meta.createtime)
+      .setTrainingTime(meta.trainingtime)
       .setTrainedTime(meta.trainedtime)
       .setDeployTime(meta.deploytime)
       .setOutcome(meta.outcome)
@@ -144,6 +151,7 @@ public class ModelMeta extends Model {
   public static class Builder extends Model.Builder<Builder> {
     private final String id;
     private long createtime;
+    private long trainingtime;
     private long trainedtime;
     private long deploytime;
     private String outcome;
@@ -156,6 +164,7 @@ public class ModelMeta extends Model {
       this.id = id;
       this.features = new ArrayList<>();
       this.categoricalFeatures = new HashSet<>();
+      this.trainingtime = -1L;
       this.trainedtime = -1L;
       this.deploytime = -1L;
       this.evaluationMetrics = new EvaluationMetrics(null, null, null, null, null, null, null);
@@ -168,6 +177,11 @@ public class ModelMeta extends Model {
 
     public Builder setDeployTime(long deployTime) {
       this.deploytime = deployTime;
+      return this;
+    }
+
+    public Builder setTrainingTime(long trainingTime) {
+      this.trainingtime = trainingTime;
       return this;
     }
 
@@ -206,7 +220,7 @@ public class ModelMeta extends Model {
     public ModelMeta build() {
       return new ModelMeta(id, name, description, algorithm, split, predictionsDataset, status, directives,
                            hyperparameters, features, outcome, categoricalFeatures, createtime,
-                           trainedtime, deploytime, evaluationMetrics);
+                           trainingtime, trainedtime, deploytime, evaluationMetrics);
     }
   }
 }

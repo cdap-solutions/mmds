@@ -34,7 +34,6 @@ import co.cask.mmds.data.ModelKey;
 import co.cask.mmds.data.ModelMeta;
 import co.cask.mmds.data.ModelStatus;
 import co.cask.mmds.data.ModelTable;
-import co.cask.mmds.data.ModelTrainerInfo;
 import co.cask.mmds.data.SortInfo;
 import co.cask.mmds.data.SortType;
 import co.cask.mmds.data.SplitKey;
@@ -55,6 +54,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Unit tests.
@@ -73,7 +73,7 @@ public class StoreTest extends TestBaseWithSpark2 {
   private ExperimentStore store;
 
   @BeforeClass
-  public static void setupTestClass() throws Exception {
+  public static void setupTestClass() {
     deployApplication(ModelPrepApp.class);
   }
 
@@ -95,7 +95,7 @@ public class StoreTest extends TestBaseWithSpark2 {
   }
 
   @Test
-  public void testExperimentsTable() throws Exception {
+  public void testExperimentsTable() {
     Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
 
     String experiment1Name = "exp123";
@@ -137,7 +137,7 @@ public class StoreTest extends TestBaseWithSpark2 {
   }
 
   @Test
-  public void testModelsTable() throws Exception {
+  public void testModelsTable() {
     Experiment experiment1 = new Experiment("e1", "", "path", "o1", "string", Collections.emptyList());
     Experiment experiment2 = new Experiment("e2", "", "path", "o1", "string", Collections.emptyList());
 
@@ -183,7 +183,7 @@ public class StoreTest extends TestBaseWithSpark2 {
   }
 
   @Test
-  public void testSplitsTable() throws Exception {
+  public void testSplitsTable() {
     String experiment1 = "e1";
     String experiment2 = "e2";
     Assert.assertTrue(splitTable.list(experiment1).isEmpty());
@@ -198,9 +198,10 @@ public class StoreTest extends TestBaseWithSpark2 {
       .setSchema(Schema.recordOf("s1", Schema.Field.of("f1", Schema.of(Schema.Type.STRING))))
       .setType("random")
       .build();
-    String split1Id = splitTable.addSplit(experiment1, split1);
+    String split1Id = splitTable.addSplit(experiment1, split1, 100);
     SplitKey split1Key = new SplitKey(experiment1, split1Id);
     DataSplitStats split1Stats = DataSplitStats.builder(split1Id)
+      .setStartTime(100L)
       .setDescription(split1.getDescription())
       .setDirectives(split1.getDirectives())
       .setParams(split1.getParams())
@@ -216,9 +217,10 @@ public class StoreTest extends TestBaseWithSpark2 {
       .setSchema(Schema.recordOf("s1", Schema.Field.of("f1", Schema.of(Schema.Type.STRING))))
       .setType("random")
       .build();
-    String split2Id = splitTable.addSplit(experiment2, split2);
+    String split2Id = splitTable.addSplit(experiment2, split2, 200);
     SplitKey split2Key = new SplitKey(experiment2, split2Id);
     DataSplitStats split2Stats = DataSplitStats.builder(split2Id)
+      .setStartTime(200L)
       .setDescription(split2.getDescription())
       .setDirectives(split2.getDirectives())
       .setParams(split2.getParams())
@@ -245,7 +247,7 @@ public class StoreTest extends TestBaseWithSpark2 {
   }
 
   @Test
-  public void testExperimentsSorting() throws Exception {
+  public void testExperimentsSorting() {
     Assert.assertTrue(experimentsTable.list(0, 50).getExperiments().isEmpty());
 
     String experiment1Name = "abc123";
@@ -308,7 +310,7 @@ public class StoreTest extends TestBaseWithSpark2 {
   }
 
   @Test
-  public void testModelLifecycle() throws Exception {
+  public void testModelLifecycle() {
     // create an experiment
     Experiment experiment = new Experiment("re", "desc", "srcpath", "outcome", "string", Collections.emptyList());
     store.putExperiment(experiment);
@@ -346,7 +348,7 @@ public class StoreTest extends TestBaseWithSpark2 {
     }
     // cannot train the model without a split
     try {
-      store.trainModel(modelKey, trainModelRequest);
+      store.trainModel(modelKey, trainModelRequest, 100);
       Assert.fail();
     } catch (ConflictException e) {
       // expected
@@ -357,7 +359,7 @@ public class StoreTest extends TestBaseWithSpark2 {
                                     Schema.Field.of("outcome", Schema.of(Schema.Type.STRING)),
                                     Schema.Field.of("f1", Schema.of(Schema.Type.STRING)));
     DataSplit dataSplit = new DataSplit("desc", "random", Collections.emptyMap(), directives, schema);
-    DataSplitInfo dataSplitInfo = store.addSplit(experiment.getName(), dataSplit);
+    DataSplitInfo dataSplitInfo = store.addSplit(experiment.getName(), dataSplit, 100);
     flush();
     SplitKey splitKey = new SplitKey(experiment.getName(), dataSplitInfo.getSplitId());
 
@@ -375,14 +377,14 @@ public class StoreTest extends TestBaseWithSpark2 {
     }
     // cannot train the model without a split
     try {
-      store.trainModel(modelKey, trainModelRequest);
+      store.trainModel(modelKey, trainModelRequest, 100);
       Assert.fail();
     } catch (ConflictException e) {
       // expected
     }
 
     // finish the split
-    store.finishSplit(splitKey, "trainingPath", "testPath", Collections.emptyList());
+    store.finishSplit(splitKey, "trainingPath", "testPath", Collections.emptyList(), System.currentTimeMillis());
     flush();
 
     // model should now be in DATA_READY state with features set
@@ -401,7 +403,7 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(ModelStatus.PREPARING, modelMeta.getStatus());
 
     // create another split and assign it to the model again, model should be in SPLITTING
-    dataSplitInfo = store.addSplit(experiment.getName(), dataSplit);
+    dataSplitInfo = store.addSplit(experiment.getName(), dataSplit, 100);
     flush();
     splitKey = new SplitKey(experiment.getName(), dataSplitInfo.getSplitId());
     store.setModelSplit(modelKey, splitKey.getSplit());
@@ -410,7 +412,7 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(ModelStatus.SPLITTING, modelMeta.getStatus());
 
     // finish the split
-    store.finishSplit(splitKey, "trainingPath", "testPath", Collections.emptyList());
+    store.finishSplit(splitKey, "trainingPath", "testPath", Collections.emptyList(), System.currentTimeMillis());
     flush();
     // model should now be in DATA_READY state with features set
     modelMeta = store.getModel(modelKey);
@@ -418,7 +420,7 @@ public class StoreTest extends TestBaseWithSpark2 {
     Assert.assertEquals(ImmutableList.of("f1"), modelMeta.getFeatures());
 
     // now train the model
-    ModelTrainerInfo modelTrainerInfo = store.trainModel(modelKey, trainModelRequest);
+    store.trainModel(modelKey, trainModelRequest, 100);
     flush();
     // model should be in TRAINING state
     modelMeta = store.getModel(modelKey);
@@ -426,7 +428,7 @@ public class StoreTest extends TestBaseWithSpark2 {
 
     // should not be able to perform any lifecycle operations
     try {
-      store.trainModel(modelKey, trainModelRequest);
+      store.trainModel(modelKey, trainModelRequest, 100);
       Assert.fail();
     } catch (ConflictException e) {
       // expected

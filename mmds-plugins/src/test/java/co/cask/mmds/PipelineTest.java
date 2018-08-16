@@ -470,7 +470,7 @@ public class PipelineTest extends HydratorTestBase {
     DataSetManager<PartitionedFileSet> splitsDatasetManager = getDataset(Constants.Dataset.SPLITS);
     PartitionedFileSet splitsDataset = splitsDatasetManager.get();
     DataSplitTable dataSplitTable = new DataSplitTable(splitsDataset);
-    String splitId = dataSplitTable.addSplit(experiment, split);
+    String splitId = dataSplitTable.addSplit(experiment, split, System.currentTimeMillis());
     splitsDatasetManager.flush();
 
     Map<String, String> properties = ImmutableMap.of("experimentId", experiment, "splitId", splitId);
