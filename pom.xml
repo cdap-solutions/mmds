@@ -20,7 +20,7 @@
 
   <groupId>co.cask.mmds</groupId>
   <artifactId>mmds</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Model Management and Distribution Services</name>
@@ -33,7 +33,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <cdap.version>5.1.0-SNAPSHOT</cdap.version>
+    <cdap.version>5.2.0-SNAPSHOT</cdap.version>
     <netty.http.version>1.0.0</netty.http.version>
     <gson.version>2.7</gson.version>
     <guava.version>13.0.1</guava.version>
