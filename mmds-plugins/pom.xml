@@ -230,7 +230,7 @@
         <version>1.0.1-SNAPSHOT</version>
         <configuration>
           <cdapArtifacts>
-            <parent>system:cdap-data-pipeline[5.0.0-SNAPSHOT,5.1.0)</parent>
+            <parent>system:cdap-data-pipeline[5.0.0,7.0.0)</parent>
           </cdapArtifacts>
         </configuration>
         <executions>
