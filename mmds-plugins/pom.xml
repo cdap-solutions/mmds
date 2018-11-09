@@ -21,7 +21,7 @@
   <parent>
     <groupId>co.cask.mmds</groupId>
     <artifactId>mmds</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
   </parent>
 
   <artifactId>mmds-plugins</artifactId>
@@ -230,7 +230,7 @@
         <version>1.0.1-SNAPSHOT</version>
         <configuration>
           <cdapArtifacts>
-            <parent>system:cdap-data-pipeline[5.1.0-SNAPSHOT,6.0.0)</parent>
+            <parent>system:cdap-data-pipeline[5.1.0,6.0.0-SNAPSHOT)</parent>
           </cdapArtifacts>
         </configuration>
         <executions>
