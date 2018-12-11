@@ -2,7 +2,7 @@
     "name": "predictor_v1",
     "artifact": {
         "name": "cdap-data-pipeline",
-        "version": "4.3.0",
+        "version": "5.1.0",
         "scope": "SYSTEM"
     },
     "config": {
@@ -46,7 +46,7 @@
                     "label": "File",
                     "artifact": {
                         "name": "core-plugins",
-                        "version": "1.8.0",
+                        "version": "2.1.1",
                         "scope": "SYSTEM"
                     },
                     "properties": {
@@ -76,7 +76,7 @@
                     "label": "CSVParser",
                     "artifact": {
                         "name": "transform-plugins",
-                        "version": "1.8.0",
+                        "version": "2.1.1",
                         "scope": "SYSTEM"
                     },
                     "properties": {
@@ -108,7 +108,7 @@
                     "label": "MLPredictor",
                     "artifact": {
                         "name": "ml-plugins",
-                        "version": "1.1.0",
+                        "version": "1.1.1",
                         "scope": "SYSTEM"
                     },
                     "properties": {
@@ -141,7 +141,7 @@
                     "label": "Avro Time Partitioned Dataset",
                     "artifact": {
                         "name": "core-plugins",
-                        "version": "1.8.0",
+                        "version": "2.1.1",
                         "scope": "SYSTEM"
                     },
                     "properties": {
