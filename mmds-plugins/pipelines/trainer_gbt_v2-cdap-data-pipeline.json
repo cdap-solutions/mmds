@@ -37,7 +37,7 @@
                     "label": "File",
                     "artifact": {
                         "name": "core-plugins",
-                        "version": "2.1.0",
+                        "version": "2.1.1",
                         "scope": "SYSTEM"
                     },
                     "properties": {
@@ -67,7 +67,7 @@
                     "label": "Wrangler",
                     "artifact": {
                         "name": "wrangler-transform",
-                        "version": "3.2.0",
+                        "version": "3.2.1",
                         "scope": "SYSTEM"
                     },
                     "properties": {
@@ -101,7 +101,7 @@
                     "label": "ModelTrainer",
                     "artifact": {
                         "name": "ml-plugins",
-                        "version": "1.1.0",
+                        "version": "1.1.1",
                         "scope": "SYSTEM"
                     },
                     "properties": {
