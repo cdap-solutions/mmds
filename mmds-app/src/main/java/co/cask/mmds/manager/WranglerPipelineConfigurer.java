@@ -18,7 +18,6 @@ package co.cask.mmds.manager;
 
 
 import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.data.stream.Stream;
 import co.cask.cdap.api.dataset.Dataset;
 import co.cask.cdap.api.dataset.DatasetProperties;
 import co.cask.cdap.api.dataset.module.DatasetModule;
@@ -74,16 +73,6 @@ public class WranglerPipelineConfigurer implements PipelineConfigurer {
   @Override
   public void setPipelineProperties(Map<String, String> map) {
     // no-op
-  }
-
-  @Override
-  public void addStream(Stream stream) {
-    throw new UnsupportedOperationException("Cannot add streams in MMDS.");
-  }
-
-  @Override
-  public void addStream(String s) {
-    throw new UnsupportedOperationException("Cannot add streams in MMDS.");
   }
 
   @Override
