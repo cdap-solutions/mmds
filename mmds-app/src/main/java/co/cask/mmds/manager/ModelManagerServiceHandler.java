@@ -70,6 +70,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -125,6 +126,12 @@ public class ModelManagerServiceHandler implements SparkHttpServiceHandler {
   @Override
   public void destroy() {
     // no-op
+  }
+
+  @GET
+  @Path("/health")
+  public void healthCheck(HttpServiceRequest request, HttpServiceResponder responder) {
+    responder.sendStatus(HttpURLConnection.HTTP_OK);
   }
 
   @GET
