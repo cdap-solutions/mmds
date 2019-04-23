@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2017-2018 Cask Data, Inc.
+  ~ Copyright © 2017-2018 CDAP
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
   ~ use this file except in compliance with the License. You may obtain a copy of
@@ -118,7 +118,7 @@
             </manifest>
           </archive>
           <instructions>
-            <_exportcontents>co.cask.cdap.etl.api</_exportcontents>
+            <_exportcontents>io.cdap.cdap.etl.api</_exportcontents>
             <Embed-Dependency>*;inline=false;scope=compile</Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
             <Embed-Directory>lib</Embed-Directory>
