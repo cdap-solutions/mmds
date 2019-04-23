@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2017-2018 Cask Data, Inc.
+  ~ Copyright © 2017-2018 CDAP
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
   ~ use this file except in compliance with the License. You may obtain a copy of
@@ -28,8 +28,8 @@
   <url>https://github.com/cask-solutions/mmds</url>
 
   <organization>
-    <name>Cask Data, Inc.</name>
-    <url>http://cask.co</url>
+    <name>CDAP</name>
+    <url>http://cdap.io</url>
   </organization>
 
   <licenses>
@@ -41,9 +41,9 @@
 
   <developers>
     <developer>
-      <name>Cask Data</name>
-      <email>cask-dev@googlegroups.com</email>
-      <organization>Cask Data, Inc.</organization>
+      <name>CDAP</name>
+      <email>cdap-dev@googlegroups.com</email>
+      <organization>CDAP</organization>
       <organizationUrl>http://www.cdap.io</organizationUrl>
     </developer>
   </developers>
@@ -84,8 +84,8 @@
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
     <site>
-      <id>cask</id>
-      <url>http://cask.co</url>
+      <id>cdap</id>
+      <url>http://cdap.io</url>
     </site>
   </distributionManagement>
 
@@ -208,7 +208,7 @@
               </links>
               <doctitle>${project.name} ${project.version}</doctitle>
               <bottom>
-                <![CDATA[Copyright &#169; {currentYear} <a href="http://cask.co" target="_blank">Cask Data, Inc.</a> Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License, Version 2.0</a>.]]>
+                <![CDATA[Copyright &#169; {currentYear} <a href="http://cdap.io" target="_blank">CDAP</a> Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License, Version 2.0</a>.]]>
               </bottom>
             </configuration>
             <executions>
