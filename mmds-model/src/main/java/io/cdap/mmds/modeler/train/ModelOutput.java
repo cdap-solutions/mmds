@@ -16,7 +16,7 @@
 
 package io.cdap.mmds.modeler.train;
 
-import co.cask.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.data.schema.Schema;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.cdap.mmds.api.AlgorithmType;

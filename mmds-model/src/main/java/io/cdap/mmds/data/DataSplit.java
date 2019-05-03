@@ -16,7 +16,7 @@
 
 package io.cdap.mmds.data;
 
-import co.cask.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.mmds.splitter.DatasetSplitter;
 import io.cdap.mmds.splitter.Splitters;
 
