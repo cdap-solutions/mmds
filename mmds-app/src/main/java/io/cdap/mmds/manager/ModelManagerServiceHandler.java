@@ -16,17 +16,17 @@
 
 package io.cdap.mmds.manager;
 
-import co.cask.cdap.api.common.Bytes;
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.dataset.lib.FileSet;
-import co.cask.cdap.api.dataset.lib.IndexedTable;
-import co.cask.cdap.api.dataset.lib.PartitionedFileSet;
-import co.cask.cdap.api.service.http.HttpServiceRequest;
-import co.cask.cdap.api.service.http.HttpServiceResponder;
-import co.cask.cdap.api.spark.service.SparkHttpServiceContext;
-import co.cask.cdap.api.spark.service.SparkHttpServiceHandler;
-import co.cask.cdap.api.spark.sql.DataFrames;
-import co.cask.cdap.internal.io.SchemaTypeAdapter;
+import io.cdap.cdap.api.common.Bytes;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.dataset.lib.FileSet;
+import io.cdap.cdap.api.dataset.lib.IndexedTable;
+import io.cdap.cdap.api.dataset.lib.PartitionedFileSet;
+import io.cdap.cdap.api.service.http.HttpServiceRequest;
+import io.cdap.cdap.api.service.http.HttpServiceResponder;
+import io.cdap.cdap.api.spark.service.SparkHttpServiceContext;
+import io.cdap.cdap.api.spark.service.SparkHttpServiceHandler;
+import io.cdap.cdap.api.spark.sql.DataFrames;
+import io.cdap.cdap.internal.io.SchemaTypeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;

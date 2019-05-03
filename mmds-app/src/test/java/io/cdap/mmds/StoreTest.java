@@ -16,12 +16,12 @@
 
 package io.cdap.mmds;
 
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.dataset.lib.IndexedTable;
-import co.cask.cdap.api.dataset.lib.PartitionedFileSet;
-import co.cask.cdap.test.DataSetManager;
-import co.cask.cdap.test.TestBaseWithSpark2;
-import co.cask.cdap.test.TestConfiguration;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.dataset.lib.IndexedTable;
+import io.cdap.cdap.api.dataset.lib.PartitionedFileSet;
+import io.cdap.cdap.test.DataSetManager;
+import io.cdap.cdap.test.TestBaseWithSpark2;
+import io.cdap.cdap.test.TestConfiguration;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
