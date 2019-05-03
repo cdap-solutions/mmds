@@ -17,7 +17,6 @@
 package io.cdap.mmds.splitter;
 
 import io.cdap.mmds.stats.CategoricalHisto;
-import io.cdap.mmds.stats.CategoricalHisto;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.sql.Row;
 import scala.Tuple2;

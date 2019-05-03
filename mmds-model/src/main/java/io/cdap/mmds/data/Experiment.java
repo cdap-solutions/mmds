@@ -16,9 +16,9 @@
 
 package io.cdap.mmds.data;
 
-import co.cask.cdap.api.data.schema.Schema;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import io.cdap.cdap.api.data.schema.Schema;
 
 import java.util.Collections;
 import java.util.List;

@@ -16,12 +16,10 @@
 
 package io.cdap.mmds.modeler.train;
 
-import co.cask.cdap.api.data.schema.Schema;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.mmds.api.AlgorithmType;
-import io.cdap.mmds.api.AlgorithmType;
-import io.cdap.mmds.data.EvaluationMetrics;
 import io.cdap.mmds.data.EvaluationMetrics;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.feature.StringIndexerModel;

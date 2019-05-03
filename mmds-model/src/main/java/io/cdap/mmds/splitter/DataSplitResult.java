@@ -17,7 +17,6 @@
 package io.cdap.mmds.splitter;
 
 import io.cdap.mmds.data.ColumnSplitStats;
-import io.cdap.mmds.data.ColumnSplitStats;
 
 import java.util.List;
 

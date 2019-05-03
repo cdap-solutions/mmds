@@ -17,7 +17,6 @@
 package io.cdap.mmds.splitter;
 
 import io.cdap.mmds.splitter.param.RandomParams;
-import io.cdap.mmds.splitter.param.RandomParams;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 

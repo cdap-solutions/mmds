@@ -17,7 +17,6 @@
 package io.cdap.mmds.splitter;
 
 import io.cdap.mmds.spec.ParamSpec;
-import io.cdap.mmds.spec.ParamSpec;
 
 import java.util.List;
 

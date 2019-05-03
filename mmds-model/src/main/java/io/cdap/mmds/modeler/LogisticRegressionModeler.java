@@ -17,10 +17,7 @@
 package io.cdap.mmds.modeler;
 
 import io.cdap.mmds.api.AlgorithmType;
-import io.cdap.mmds.api.AlgorithmType;
 import io.cdap.mmds.api.Modeler;
-import io.cdap.mmds.api.Modeler;
-import io.cdap.mmds.modeler.param.LogisticRegressionParams;
 import io.cdap.mmds.modeler.param.LogisticRegressionParams;
 import org.apache.spark.ml.Predictor;
 import org.apache.spark.ml.classification.LogisticRegression;

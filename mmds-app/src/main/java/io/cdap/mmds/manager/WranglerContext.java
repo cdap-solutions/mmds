@@ -17,18 +17,18 @@
 package io.cdap.mmds.manager;
 
 
-import co.cask.cdap.api.ServiceDiscoverer;
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.metadata.Metadata;
-import co.cask.cdap.api.metadata.MetadataEntity;
-import co.cask.cdap.api.metadata.MetadataScope;
-import co.cask.cdap.api.plugin.PluginContext;
-import co.cask.cdap.api.plugin.PluginProperties;
-import co.cask.cdap.etl.api.Arguments;
-import co.cask.cdap.etl.api.Lookup;
-import co.cask.cdap.etl.api.StageMetrics;
-import co.cask.cdap.etl.api.TransformContext;
-import co.cask.cdap.etl.api.lineage.field.FieldOperation;
+import io.cdap.cdap.api.ServiceDiscoverer;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.metadata.Metadata;
+import io.cdap.cdap.api.metadata.MetadataEntity;
+import io.cdap.cdap.api.metadata.MetadataScope;
+import io.cdap.cdap.api.plugin.PluginContext;
+import io.cdap.cdap.api.plugin.PluginProperties;
+import io.cdap.cdap.etl.api.Arguments;
+import io.cdap.cdap.etl.api.Lookup;
+import io.cdap.cdap.etl.api.StageMetrics;
+import io.cdap.cdap.etl.api.TransformContext;
+import io.cdap.cdap.etl.api.lineage.field.FieldOperation;
 
 import java.net.URL;
 import java.util.Collections;

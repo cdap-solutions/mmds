@@ -17,7 +17,6 @@
 package io.cdap.mmds.splitter;
 
 import io.cdap.mmds.spec.Parameters;
-import io.cdap.mmds.spec.Parameters;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 

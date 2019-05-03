@@ -16,8 +16,8 @@
 
 package io.cdap.mmds.plugin;
 
-import co.cask.cdap.api.data.format.StructuredRecord;
-import co.cask.cdap.api.spark.sql.DataFrames;
+import io.cdap.cdap.api.data.format.StructuredRecord;
+import io.cdap.cdap.api.spark.sql.DataFrames;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructType;

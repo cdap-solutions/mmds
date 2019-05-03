@@ -17,7 +17,6 @@
 package io.cdap.mmds.modeler.feature;
 
 import io.cdap.mmds.Constants;
-import io.cdap.mmds.Constants;
 import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
