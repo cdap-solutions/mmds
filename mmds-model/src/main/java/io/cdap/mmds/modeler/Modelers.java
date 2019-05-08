@@ -18,7 +18,6 @@ package io.cdap.mmds.modeler;
 
 import com.google.common.collect.ImmutableList;
 import io.cdap.mmds.api.Modeler;
-import io.cdap.mmds.api.Modeler;
 
 import java.util.Collection;
 import java.util.List;

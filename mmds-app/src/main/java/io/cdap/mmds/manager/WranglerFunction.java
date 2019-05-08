@@ -16,16 +16,16 @@
 
 package io.cdap.mmds.manager;
 
-import co.cask.cdap.api.ServiceDiscoverer;
-import co.cask.cdap.api.data.format.StructuredRecord;
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.plugin.PluginContext;
-import co.cask.cdap.api.spark.sql.DataFrames;
-import co.cask.cdap.etl.api.Emitter;
-import co.cask.cdap.etl.api.InvalidEntry;
-import co.cask.cdap.etl.api.Transform;
-import co.cask.cdap.etl.api.TransformContext;
 import com.google.common.collect.ImmutableList;
+import io.cdap.cdap.api.ServiceDiscoverer;
+import io.cdap.cdap.api.data.format.StructuredRecord;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.plugin.PluginContext;
+import io.cdap.cdap.api.spark.sql.DataFrames;
+import io.cdap.cdap.etl.api.Emitter;
+import io.cdap.cdap.etl.api.InvalidEntry;
+import io.cdap.cdap.etl.api.Transform;
+import io.cdap.cdap.etl.api.TransformContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructType;

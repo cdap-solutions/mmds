@@ -17,7 +17,6 @@
 package io.cdap.mmds.stats;
 
 import io.cdap.mmds.NullableMath;
-import io.cdap.mmds.NullableMath;
 
 import java.io.Serializable;
 import java.util.ArrayList;

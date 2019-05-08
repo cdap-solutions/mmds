@@ -16,19 +16,17 @@
 
 package io.cdap.mmds.data;
 
-import co.cask.cdap.api.common.Bytes;
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.dataset.DatasetProperties;
-import co.cask.cdap.api.dataset.lib.IndexedTable;
-import co.cask.cdap.api.dataset.table.Put;
-import co.cask.cdap.api.dataset.table.Row;
-import co.cask.cdap.api.dataset.table.Scan;
-import co.cask.cdap.api.dataset.table.Scanner;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import io.cdap.cdap.api.common.Bytes;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.dataset.DatasetProperties;
+import io.cdap.cdap.api.dataset.lib.IndexedTable;
+import io.cdap.cdap.api.dataset.table.Put;
+import io.cdap.cdap.api.dataset.table.Row;
+import io.cdap.cdap.api.dataset.table.Scan;
+import io.cdap.cdap.api.dataset.table.Scanner;
 import io.cdap.mmds.proto.CreateModelRequest;
-import io.cdap.mmds.proto.CreateModelRequest;
-import io.cdap.mmds.proto.TrainModelRequest;
 import io.cdap.mmds.proto.TrainModelRequest;
 
 import java.lang.reflect.Type;

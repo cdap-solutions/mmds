@@ -16,9 +16,9 @@
 
 package io.cdap.mmds.manager;
 
-import co.cask.cdap.api.spark.AbstractExtendedSpark;
-import co.cask.cdap.api.spark.JavaSparkExecutionContext;
-import co.cask.cdap.api.spark.JavaSparkMain;
+import io.cdap.cdap.api.spark.AbstractExtendedSpark;
+import io.cdap.cdap.api.spark.JavaSparkExecutionContext;
+import io.cdap.cdap.api.spark.JavaSparkMain;
 import io.cdap.mmds.Constants;
 import org.apache.spark.sql.SparkSession;
 
