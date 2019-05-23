@@ -17,10 +17,7 @@
 package io.cdap.mmds.modeler;
 
 import io.cdap.mmds.api.AlgorithmType;
-import io.cdap.mmds.api.AlgorithmType;
 import io.cdap.mmds.api.Modeler;
-import io.cdap.mmds.api.Modeler;
-import io.cdap.mmds.modeler.param.RandomForestRegressionParams;
 import io.cdap.mmds.modeler.param.RandomForestRegressionParams;
 import org.apache.spark.ml.Predictor;
 import org.apache.spark.ml.linalg.Vector;

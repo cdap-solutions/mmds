@@ -17,7 +17,6 @@
 package io.cdap.mmds.modeler.param;
 
 import com.google.common.collect.ImmutableSet;
-import io.cdap.mmds.spec.*;
 import io.cdap.mmds.spec.DoubleParam;
 import io.cdap.mmds.spec.ParamSpec;
 import io.cdap.mmds.spec.Parameters;

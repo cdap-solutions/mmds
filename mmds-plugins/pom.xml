@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>co.cask.mmds</groupId>
+    <groupId>io.cdap.mmds</groupId>
     <artifactId>mmds</artifactId>
     <version>1.3.0-SNAPSHOT</version>
   </parent>
@@ -38,12 +38,12 @@
 
   <dependencies>
     <dependency>
-      <groupId>co.cask.mmds</groupId>
+      <groupId>io.cdap.mmds</groupId>
       <artifactId>mmds-model</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>co.cask.mmds</groupId>
+      <groupId>io.cdap.mmds</groupId>
       <artifactId>mmds-app</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -59,54 +59,54 @@
       <version>${guava.version}</version>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-api</artifactId>
       <version>${cdap.version}</version>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-api-common</artifactId>
       <version>${cdap.version}</version>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-api-spark2_2.11</artifactId>
       <version>${cdap.version}</version>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-etl-api</artifactId>
       <version>${cdap.version}</version>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-etl-api-spark</artifactId>
       <version>${cdap.version}</version>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-data-pipeline2_2.11</artifactId>
       <version>${cdap.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>hydrator-test</artifactId>
       <version>${cdap.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-unit-test</artifactId>
       <version>${cdap.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>co.cask.cdap</groupId>
+          <groupId>io.cdap.cdap</groupId>
           <artifactId>cdap-spark-core</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>co.cask.cdap</groupId>
+          <groupId>io.cdap.cdap</groupId>
           <artifactId>cdap-api-spark</artifactId>
         </exclusion>
         <!-- exclude these since they contain commons-lang3, which conflicts with Spark's commons-lang3 -->
@@ -115,13 +115,13 @@
           <artifactId>hive-exec</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>co.cask.cdap</groupId>
+          <groupId>io.cdap.cdap</groupId>
           <artifactId>cdap-explore-jdbc</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-spark-core2_2.11</artifactId>
       <version>${cdap.version}</version>
       <scope>test</scope>
@@ -179,9 +179,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>co.cask.wrangler</groupId>
+      <groupId>io.cdap.wrangler</groupId>
       <artifactId>wrangler-transform</artifactId>
-      <version>3.0.0</version>
+      <version>4.0.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -225,12 +225,12 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>co.cask</groupId>
+        <groupId>io.cdap</groupId>
         <artifactId>cdap-maven-plugin</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.1.0</version>
         <configuration>
           <cdapArtifacts>
-            <parent>system:cdap-data-pipeline[5.0.0,7.0.0)</parent>
+            <parent>system:cdap-data-pipeline[6.0.0,7.0.0)</parent>
           </cdapArtifacts>
         </configuration>
         <executions>

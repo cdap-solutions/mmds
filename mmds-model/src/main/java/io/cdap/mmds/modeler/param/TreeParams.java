@@ -16,7 +16,6 @@
 
 package io.cdap.mmds.modeler.param;
 
-import io.cdap.mmds.spec.*;
 import io.cdap.mmds.spec.DoubleParam;
 import io.cdap.mmds.spec.IntParam;
 import io.cdap.mmds.spec.ParamSpec;

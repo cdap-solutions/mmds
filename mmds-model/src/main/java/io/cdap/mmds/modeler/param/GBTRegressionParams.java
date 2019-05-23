@@ -18,10 +18,7 @@ package io.cdap.mmds.modeler.param;
 
 import com.google.common.collect.ImmutableSet;
 import io.cdap.mmds.spec.ParamSpec;
-import io.cdap.mmds.spec.ParamSpec;
 import io.cdap.mmds.spec.Params;
-import io.cdap.mmds.spec.Params;
-import io.cdap.mmds.spec.StringParam;
 import io.cdap.mmds.spec.StringParam;
 import org.apache.spark.ml.regression.GBTRegressor;
 

@@ -16,9 +16,9 @@
 
 package io.cdap.mmds.data;
 
-import co.cask.cdap.api.data.schema.Schema;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.mmds.api.Modeler;
 import io.cdap.mmds.modeler.Modelers;
 import io.cdap.mmds.proto.BadRequestException;
@@ -39,7 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
