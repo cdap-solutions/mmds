@@ -18,7 +18,6 @@ package io.cdap.mmds.proto;
 
 import com.google.common.base.Joiner;
 import io.cdap.mmds.api.Modeler;
-import io.cdap.mmds.api.Modeler;
 import io.cdap.mmds.modeler.Modelers;
 
 import java.util.Collections;

@@ -16,8 +16,8 @@
 
 package io.cdap.mmds;
 
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.data.schema.UnsupportedTypeException;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.data.schema.UnsupportedTypeException;
 
 import java.util.Iterator;
 import java.util.Map;

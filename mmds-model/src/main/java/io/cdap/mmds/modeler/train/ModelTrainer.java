@@ -16,19 +16,13 @@
 
 package io.cdap.mmds.modeler.train;
 
-import co.cask.cdap.api.data.schema.Schema;
 import com.google.common.collect.ImmutableMap;
-import io.cdap.mmds.Constants;
+import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.mmds.Constants;
 import io.cdap.mmds.api.AlgorithmType;
-import io.cdap.mmds.api.AlgorithmType;
-import io.cdap.mmds.api.Modeler;
 import io.cdap.mmds.api.Modeler;
 import io.cdap.mmds.data.EvaluationMetrics;
-import io.cdap.mmds.data.EvaluationMetrics;
 import io.cdap.mmds.data.ModelTrainerInfo;
-import io.cdap.mmds.data.ModelTrainerInfo;
-import io.cdap.mmds.modeler.Modelers;
 import io.cdap.mmds.modeler.Modelers;
 import io.cdap.mmds.modeler.feature.FeatureGeneratorTrainer;
 import org.apache.spark.api.java.function.Function;

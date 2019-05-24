@@ -17,7 +17,6 @@
 package io.cdap.mmds.modeler;
 
 import io.cdap.mmds.api.AlgorithmType;
-import io.cdap.mmds.api.AlgorithmType;
 
 
 /**

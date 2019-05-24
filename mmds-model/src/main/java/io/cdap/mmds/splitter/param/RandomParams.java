@@ -16,7 +16,6 @@
 
 package io.cdap.mmds.splitter.param;
 
-import io.cdap.mmds.spec.*;
 import io.cdap.mmds.spec.IntParam;
 import io.cdap.mmds.spec.LongParam;
 import io.cdap.mmds.spec.ParamSpec;

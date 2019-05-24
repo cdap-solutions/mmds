@@ -16,14 +16,14 @@
 
 package io.cdap.mmds.manager;
 
-import co.cask.cdap.api.ServiceDiscoverer;
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.plugin.PluginProperties;
-import co.cask.cdap.api.spark.service.SparkHttpServicePluginContext;
-import co.cask.cdap.api.spark.sql.DataFrames;
-import co.cask.cdap.etl.api.PipelineConfigurer;
-import co.cask.cdap.etl.api.Transform;
 import com.google.common.base.Joiner;
+import io.cdap.cdap.api.ServiceDiscoverer;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.plugin.PluginProperties;
+import io.cdap.cdap.api.spark.service.SparkHttpServicePluginContext;
+import io.cdap.cdap.api.spark.sql.DataFrames;
+import io.cdap.cdap.etl.api.PipelineConfigurer;
+import io.cdap.cdap.etl.api.Transform;
 import io.cdap.mmds.NullableMath;
 import io.cdap.mmds.data.ColumnSplitStats;
 import io.cdap.mmds.data.DataSplitInfo;

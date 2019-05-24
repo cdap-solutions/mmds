@@ -17,7 +17,6 @@
 package io.cdap.mmds.splitter;
 
 import io.cdap.mmds.stats.NumericHisto;
-import io.cdap.mmds.stats.NumericHisto;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 

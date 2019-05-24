@@ -17,7 +17,6 @@
 package io.cdap.mmds.proto;
 
 import io.cdap.mmds.data.ModelKey;
-import io.cdap.mmds.data.ModelKey;
 
 
 /**
