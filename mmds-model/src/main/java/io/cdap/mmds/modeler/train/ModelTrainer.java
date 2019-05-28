@@ -127,7 +127,7 @@ public class ModelTrainer {
       targetIndexModel = targetIndexer.fit(trainingFeatures);
       trainingFeatures = targetIndexModel.transform(trainingFeatures);
       testFeatures = targetIndexModel.transform(testFeatures);
-      numericPredictionField = "_n_" + numericPredictionField;
+      numericPredictionField = Constants.CLASSIFICATION_NUMERIC_PREDICTION_FIELD;
     }
 
     Modeler modeler = Modelers.getModeler(algorithm);

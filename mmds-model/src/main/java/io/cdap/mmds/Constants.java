@@ -22,6 +22,7 @@ package io.cdap.mmds;
 public class Constants {
 
   public static final String TRAINER_PREDICTION_FIELD = "_prediction";
+  public static final String CLASSIFICATION_NUMERIC_PREDICTION_FIELD = "_n_prediction";
   public static final String FEATURES_FIELD = "_features";
 
   /**
