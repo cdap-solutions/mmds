@@ -198,7 +198,7 @@ public class MLPredictor extends SparkCompute<StructuredRecord, StructuredRecord
       String[] labels = indexerModel.labels();
       IndexToString reverseIndex = new IndexToString()
         .setLabels(labels)
-        .setInputCol(Constants.TRAINER_PREDICTION_FIELD)
+        .setInputCol(Constants.CLASSIFICATION_NUMERIC_PREDICTION_FIELD)
         .setOutputCol(conf.getPredictionField());
       predictions = reverseIndex.transform(predictions);
     } else {
