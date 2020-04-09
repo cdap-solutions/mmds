@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.cdap.mmds</groupId>
     <artifactId>mmds</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
   </parent>
 
   <artifactId>mmds-model</artifactId>
