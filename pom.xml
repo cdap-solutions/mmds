@@ -20,7 +20,7 @@
 
   <groupId>io.cdap.mmds</groupId>
   <artifactId>mmds</artifactId>
-  <version>1.5.2</version>
+  <version>1.5.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Model Management and Distribution Services</name>
