@@ -72,7 +72,7 @@
     <junit.version>4.12</junit.version>
     <slf4j.version>1.7.5</slf4j.version>
     <spark.version>2.1.0</spark.version>
-    <revision>1.11.0-SNAPSHOT</revision>
+    <revision>1.11.0</revision>
   </properties>
 
   <distributionManagement>
