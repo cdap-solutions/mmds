@@ -23,8 +23,7 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.dataset.lib.IndexedTable;
 import io.cdap.cdap.api.dataset.lib.PartitionedFileSet;
 import io.cdap.cdap.test.DataSetManager;
-import io.cdap.cdap.test.TestBaseWithSpark2;
-import io.cdap.cdap.test.TestConfiguration;
+import io.cdap.cdap.test.TestBase;
 import io.cdap.mmds.data.DataSplit;
 import io.cdap.mmds.data.DataSplitInfo;
 import io.cdap.mmds.data.DataSplitStats;
@@ -45,23 +44,18 @@ import io.cdap.mmds.manager.ModelPrepApp;
 import io.cdap.mmds.proto.ConflictException;
 import io.cdap.mmds.proto.CreateModelRequest;
 import io.cdap.mmds.proto.TrainModelRequest;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * Unit tests.
  */
-public class StoreTest extends TestBaseWithSpark2 {
-
-  @ClassRule
-  public static final TestConfiguration CONFIG = new TestConfiguration("explore.enabled", false);
+public class StoreTest extends TestBase {
 
   private DataSetManager<IndexedTable> experimentsManager;
   private ExperimentMetaTable experimentsTable;

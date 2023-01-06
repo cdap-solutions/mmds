@@ -66,7 +66,6 @@ public class DataSplitTable {
   private static final String END = "end";
   public static final DatasetProperties DATASET_PROPERTIES = PartitionedFileSetProperties.builder()
     .setPartitioning(Partitioning.builder().addStringField(EXPERIMENT).addStringField(SPLIT).build())
-    .setEnableExploreOnCreate(false)
     .setDescription("Contains data splits used to train models")
     .build();
   private final PartitionedFileSet splits;
