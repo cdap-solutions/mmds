@@ -27,19 +27,17 @@ import io.cdap.cdap.api.dataset.lib.PartitionedFileSet;
 import io.cdap.cdap.api.dataset.lib.PartitionedFileSetProperties;
 import io.cdap.cdap.api.dataset.lib.Partitioning;
 import io.cdap.mmds.Constants;
-import io.cdap.mmds.Schemas;
 import io.cdap.mmds.api.AlgorithmType;
 import io.cdap.mmds.data.ModelKey;
-import org.apache.spark.sql.SaveMode;
-import org.apache.twill.filesystem.Location;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
+import org.apache.spark.sql.SaveMode;
+import org.apache.twill.filesystem.Location;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Writes Model components.
@@ -90,10 +88,6 @@ public class ModelOutputWriter {
           Schema.recordOf(modelOutput.getSchema().getRecordName() + ".prediction", predictionFields);
         DatasetProperties datasetProperties = PartitionedFileSetProperties.builder()
           .setPartitioning(Partitioning.builder().addStringField("experiment").addStringField("model").build())
-          .setEnableExploreOnCreate(true)
-          .setExploreFormat("text")
-          .setExploreFormatProperty("delimiter", ",")
-          .setExploreSchema(Schemas.toHiveSchema(predictionSchema))
           .build();
 
         admin.createDataset(predictionsDataset, PartitionedFileSet.class.getName(), datasetProperties);

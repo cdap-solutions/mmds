@@ -22,6 +22,7 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.metadata.Metadata;
 import io.cdap.cdap.api.metadata.MetadataEntity;
 import io.cdap.cdap.api.metadata.MetadataScope;
+import io.cdap.cdap.api.metrics.Metrics;
 import io.cdap.cdap.api.plugin.PluginContext;
 import io.cdap.cdap.api.plugin.PluginProperties;
 import io.cdap.cdap.etl.api.Arguments;
@@ -90,6 +91,11 @@ public class WranglerContext implements TransformContext {
       }
 
       @Override
+      public Metrics child(Map<String, String> map) {
+        return null;
+      }
+
+      @Override
       public void pipelineCount(String s, int i) {
         // no-op
       }
@@ -97,6 +103,11 @@ public class WranglerContext implements TransformContext {
       @Override
       public void pipelineGauge(String s, long l) {
         // no-op
+      }
+
+      @Override
+      public Map<String, String> getTags() {
+        return Collections.emptyMap();
       }
     };
   }

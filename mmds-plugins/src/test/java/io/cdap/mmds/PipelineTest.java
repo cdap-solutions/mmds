@@ -72,14 +72,6 @@ import io.cdap.mmds.proto.CreateModelRequest;
 import io.cdap.mmds.proto.TrainModelRequest;
 import io.cdap.mmds.stats.CategoricalHisto;
 import io.cdap.wrangler.Wrangler;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -91,6 +83,13 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Unit tests for our plugins.
@@ -103,8 +102,8 @@ public class PipelineTest extends HydratorTestBase {
     .create();
   private static final ArtifactSummary APP_ARTIFACT = new ArtifactSummary("data-pipeline", "1.0.0");
   @ClassRule
-  public static final TestConfiguration CONFIG = new TestConfiguration("explore.enabled", false,
-                                                                       "app.program.spark.compat", "spark2_2.11");
+  public static final TestConfiguration CONFIG =
+      new TestConfiguration("app.program.spark.compat", "spark2_2.11");
   private static SparkManager sparkManager;
   private static URL serviceURL;
 
